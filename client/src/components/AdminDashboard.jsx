@@ -431,32 +431,32 @@ const AdminDashboard = ({ mockTime }) => {
                     <h2 className="title">Postavke</h2>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         <div>
-                            <h3>Jutarnji Termin</h3>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                                <div>Početak: <input type="number" value={settings.morningStart} onChange={e => setSettings({ ...settings, morningStart: parseInt(e.target.value) })} /></div>
-                                <div>Kraj: <input type="number" value={settings.morningEnd} onChange={e => setSettings({ ...settings, morningEnd: parseInt(e.target.value) })} /></div>
+                            <h3 style={{ marginBottom: '10px', marginTop: 0 }}>Jutarnji Termin</h3>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '15px' }}>
+                                <div><label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '5px' }}>Početak:</label> <input type="number" value={settings.morningStart} onChange={e => setSettings({ ...settings, morningStart: parseInt(e.target.value) })} style={{ width: '100%' }} /></div>
+                                <div><label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '5px' }}>Kraj:</label> <input type="number" value={settings.morningEnd} onChange={e => setSettings({ ...settings, morningEnd: parseInt(e.target.value) })} style={{ width: '100%' }} /></div>
                             </div>
                         </div>
 
                         <div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <h3>Popodnevni Termin</h3>
-                                <label>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginBottom: '10px' }}>
+                                <h3 style={{ margin: 0 }}>Popodnevni Termin</h3>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                                     Enable:
-                                    <input type="checkbox" checked={settings.afternoonEnabled} onChange={e => setSettings({ ...settings, afternoonEnabled: e.target.checked })} />
+                                    <input type="checkbox" checked={settings.afternoonEnabled} onChange={e => setSettings({ ...settings, afternoonEnabled: e.target.checked })} style={{ width: 'auto' }} />
                                 </label>
                             </div>
                             {settings.afternoonEnabled && (
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                                    <div>Početak: <input type="number" value={settings.afternoonStart} onChange={e => setSettings({ ...settings, afternoonStart: parseInt(e.target.value) })} /></div>
-                                    <div>Kraj: <input type="number" value={settings.afternoonEnd} onChange={e => setSettings({ ...settings, afternoonEnd: parseInt(e.target.value) })} /></div>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '15px' }}>
+                                    <div><label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '5px' }}>Početak:</label> <input type="number" value={settings.afternoonStart} onChange={e => setSettings({ ...settings, afternoonStart: parseInt(e.target.value) })} style={{ width: '100%' }} /></div>
+                                    <div><label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '5px' }}>Kraj:</label> <input type="number" value={settings.afternoonEnd} onChange={e => setSettings({ ...settings, afternoonEnd: parseInt(e.target.value) })} style={{ width: '100%' }} /></div>
                                 </div>
                             )}
                         </div>
 
                         <div>
-                            <h3 style={{ textAlign: 'center' }}>Vrijeme Isporuke</h3>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', textAlign: 'center' }}>
+                            <h3 style={{ textAlign: 'center', marginBottom: '15px' }}>Vrijeme Isporuke</h3>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '20px', textAlign: 'center' }}>
                                 <div>
                                     <label style={{ display: 'block', marginBottom: '5px' }}>Jutro (HH:MM):</label>
                                     <input
