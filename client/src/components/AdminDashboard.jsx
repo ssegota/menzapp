@@ -10,7 +10,9 @@ const AdminDashboard = ({ mockTime }) => {
     const [settings, setSettings] = useState({
         morningStart: 8, morningEnd: 10,
         afternoonStart: 14, afternoonEnd: 16,
-        afternoonEnabled: true
+        afternoonEnabled: true,
+        morningDeliveryTime: "10:30",
+        afternoonDeliveryTime: "16:30"
     });
 
     // Menu State
@@ -24,6 +26,7 @@ const AdminDashboard = ({ mockTime }) => {
 
     // Orders State
     const [searchCode, setSearchCode] = useState('');
+    const [orderSlotFilter, setOrderSlotFilter] = useState('all'); // all, morning, afternoon
     const [pickupModalOpen, setPickupModalOpen] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
 
@@ -199,19 +202,35 @@ const AdminDashboard = ({ mockTime }) => {
     // Filter logic
     const pendingOrders = orders.filter(o => o.status === 'pending');
     const nonCollectedOrders = orders.filter(o => o.status === 'non_collected');
-    const getFilteredPending = () => searchCode ? pendingOrders.filter(o => o.code && o.code.includes(searchCode)) : pendingOrders;
+    const getFilteredPending = () => {
+        let filtered = pendingOrders;
+        if (orderSlotFilter !== 'all') {
+            filtered = filtered.filter(o => o.slot === orderSlotFilter);
+        }
+        if (searchCode) {
+            filtered = filtered.filter(o => o.code && o.code.includes(searchCode));
+        }
+        return filtered;
+    };
 
     return (
-        <div className="dashboard-grid">
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', gridColumn: '1 / -1' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '1000px', margin: '0 auto' }}>
+            <div style={{ display: 'flex', gap: '15px', marginBottom: '25px', width: '100%', justifyContent: 'center', flexWrap: 'wrap' }}>
                 {['menu', 'orders', 'non-collected', 'settings'].map(tab => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
                         style={{
+                            flex: '1 1 auto',
+                            minWidth: '120px',
                             background: activeTab === tab ? 'var(--color-primary)' : '#e0e0e0',
                             color: activeTab === tab ? 'var(--color-text)' : '#555',
-                            boxShadow: activeTab === tab ? '0 2px 5px rgba(0,0,0,0.1)' : 'none'
+                            boxShadow: activeTab === tab ? '0 2px 5px rgba(0,0,0,0.1)' : 'none',
+                            textAlign: 'center',
+                            padding: '12px',
+                            fontWeight: 'bold',
+                            borderRadius: '8px',
+                            transition: 'all 0.2s ease-in-out'
                         }}
                     >
                         {tab === 'menu' && 'Meni'}
@@ -224,12 +243,12 @@ const AdminDashboard = ({ mockTime }) => {
 
             {/* MENU TAB */}
             {activeTab === 'menu' && (
-                <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'inherit', gap: '20px' }}>
-                    <div>
-                        <h2 className="title" style={{ fontSize: '1.5rem', marginBottom: '10px' }}>Uređivanje Menija</h2>
+                <div style={{ width: '100%', display: 'flex', flexDirection: 'row', gap: '20px', maxWidth: '1000px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                    <div className="card" style={{ padding: '30px', flex: '1 1 400px' }}>
+                        <h2 className="title" style={{ fontSize: '1.8rem', textAlign: 'center' }}>Uređivanje Menija</h2>
 
-                        <div style={{ marginBottom: '20px' }}>
-                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Datum:</label>
+                        <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>Datum:</label>
                             <Calendar
                                 onChange={setSelectedDate}
                                 value={selectedDate}
@@ -238,19 +257,19 @@ const AdminDashboard = ({ mockTime }) => {
                             />
                         </div>
 
-                        <div style={{ marginBottom: '15px' }}>
-                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Termin:</label>
-                            <div style={{ display: 'flex', gap: '10px' }}>
+                        <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>Termin:</label>
+                            <div style={{ display: 'flex', gap: '15px' }}>
                                 <button
                                     onClick={() => setSelectedSlot('morning')}
-                                    style={{ background: selectedSlot === 'morning' ? 'var(--color-primary)' : '#eee' }}
+                                    style={{ flex: 1, padding: '10px 20px', background: selectedSlot === 'morning' ? 'var(--color-primary)' : '#eee' }}
                                 >
                                     Jutro
                                 </button>
                                 {settings.afternoonEnabled && (
                                     <button
                                         onClick={() => setSelectedSlot('afternoon')}
-                                        style={{ background: selectedSlot === 'afternoon' ? 'var(--color-secondary)' : '#eee', color: selectedSlot === 'afternoon' ? 'white' : '#333' }}
+                                        style={{ flex: 1, padding: '10px 20px', background: selectedSlot === 'afternoon' ? 'var(--color-secondary)' : '#eee', color: selectedSlot === 'afternoon' ? 'white' : '#333' }}
                                     >
                                         Popodne
                                     </button>
@@ -272,8 +291,8 @@ const AdminDashboard = ({ mockTime }) => {
                         </form>
                     </div>
 
-                    <div style={{ background: '#f9f9f9', padding: '20px', borderRadius: '12px' }}>
-                        <h3 style={{ marginTop: 0 }}>Jela ({selectedDate.toLocaleDateString()})</h3>
+                    <div className="card" style={{ padding: '30px', textAlign: 'center', flex: '1 1 400px' }}>
+                        <h3 style={{ marginTop: 0, fontSize: '1.5rem', color: 'var(--color-accent)' }}>Jela ({selectedDate.toLocaleDateString()})</h3>
 
                         {currentDayMenus.length === 0 ? <p style={{ color: '#888' }}>Nema jela.</p> : (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -302,21 +321,30 @@ const AdminDashboard = ({ mockTime }) => {
 
             {/* ORDERS TAB */}
             {activeTab === 'orders' && (
-                <div className="card">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                        <div>
-                            <h2 className="title" style={{ fontSize: '1.8rem', margin: 0, textAlign: 'left' }}>Narudžbe</h2>
-                            <input
-                                type="text"
-                                placeholder="Traži kod..."
-                                value={searchCode}
-                                onChange={e => setSearchCode(e.target.value)}
-                                style={{ marginTop: '10px', width: '200px' }}
-                            />
-                        </div>
+                <div className="card" style={{ width: '100%', padding: '30px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '30px', gap: '15px' }}>
+                        <h2 className="title" style={{ fontSize: '1.8rem', margin: 0 }}>Sve Narudžbe</h2>
+
+                        <select
+                            value={orderSlotFilter}
+                            onChange={e => setOrderSlotFilter(e.target.value)}
+                            style={{ width: '100%', maxWidth: '300px', textAlign: 'center', padding: '10px', borderRadius: '8px' }}
+                        >
+                            <option value="all">Svi termini</option>
+                            <option value="morning">Jutro</option>
+                            <option value="afternoon">Popodne</option>
+                        </select>
+
+                        <input
+                            type="text"
+                            placeholder="Traži kod..."
+                            value={searchCode}
+                            onChange={e => setSearchCode(e.target.value)}
+                            style={{ width: '100%', maxWidth: '300px', textAlign: 'center' }}
+                        />
                         <button
                             onClick={handleMoveToNonCollected}
-                            style={{ background: 'var(--color-danger)', color: 'white' }}
+                            style={{ background: 'var(--color-danger)', color: 'white', width: '100%', maxWidth: '300px' }}
                         >
                             Prebaci u Nepreuzeto
                         </button>
@@ -358,16 +386,16 @@ const AdminDashboard = ({ mockTime }) => {
 
             {/* NON-COLLECTED TAB */}
             {activeTab === 'non-collected' && (
-                <div className="card">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <h2 className="title" style={{ fontSize: '1.8rem' }}>Nepreuzete</h2>
-                        <div style={{ display: 'flex', gap: '10px' }}>
-                            <button onClick={exportNonCollected} style={{ background: 'var(--color-success)', color: 'white' }}>Export CSV</button>
-                            <button onClick={handleDeleteAllNonCollected} style={{ background: 'var(--color-danger)', color: 'white' }}>Obriši Sve</button>
+                <div className="card" style={{ width: '100%', padding: '30px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', marginBottom: '20px' }}>
+                        <h2 className="title" style={{ fontSize: '1.8rem', margin: 0 }}>Nepreuzete Narudžbe</h2>
+                        <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                            <button onClick={exportNonCollected} style={{ background: 'var(--color-success)', color: 'white', minWidth: '150px' }}>Export CSV</button>
+                            <button onClick={handleDeleteAllNonCollected} style={{ background: 'var(--color-danger)', color: 'white', minWidth: '150px' }}>Obriši Sve</button>
                         </div>
                     </div>
 
-                    {nonCollectedOrders.length === 0 ? <p>Prazno.</p> : (
+                    {nonCollectedOrders.length === 0 ? <p style={{ textAlign: 'center' }}>Prazno.</p> : (
                         <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
                             <thead>
                                 <tr style={{ background: '#f5f5f5', textAlign: 'left' }}>
@@ -424,7 +452,33 @@ const AdminDashboard = ({ mockTime }) => {
                             )}
                         </div>
 
-                        <button onClick={handleSaveSettings}>Spremi Postavke</button>
+                        <div>
+                            <h3 style={{ textAlign: 'center' }}>Vrijeme Isporuke</h3>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', textAlign: 'center' }}>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '5px' }}>Jutro (HH:MM):</label>
+                                    <input
+                                        type="time"
+                                        value={settings.morningDeliveryTime || "10:30"}
+                                        onChange={e => setSettings({ ...settings, morningDeliveryTime: e.target.value })}
+                                        style={{ width: '100%', textAlign: 'center' }}
+                                    />
+                                </div>
+                                {settings.afternoonEnabled && (
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: '5px' }}>Popodne (HH:MM):</label>
+                                        <input
+                                            type="time"
+                                            value={settings.afternoonDeliveryTime || "16:30"}
+                                            onChange={e => setSettings({ ...settings, afternoonDeliveryTime: e.target.value })}
+                                            style={{ width: '100%', textAlign: 'center' }}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <button onClick={handleSaveSettings} style={{ width: '100%', marginTop: '10px' }}>Spremi Postavke</button>
                     </div>
                 </div>
             )}

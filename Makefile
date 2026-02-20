@@ -13,3 +13,10 @@ run-backend:
 run:
 	@echo "Starting both backend and frontend servers..."
 	$(MAKE) -j2 run-backend run-frontend
+
+run-frontend-host:
+	cd client && npm run dev -- --host
+
+host:
+	@echo "Starting both backend and frontend servers on host network..."
+	$(MAKE) -j2 run-backend run-frontend-host

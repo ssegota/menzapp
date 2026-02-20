@@ -10,7 +10,7 @@ function App() {
 
   // Check for stored session
   useEffect(() => {
-    const storedUser = localStorage.getItem('menzapp_user');
+    const storedUser = localStorage.getItem('marendapp_user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
@@ -18,12 +18,12 @@ function App() {
 
   const handleLogin = (userData) => {
     setUser(userData);
-    localStorage.setItem('menzapp_user', JSON.stringify(userData));
+    localStorage.setItem('marendapp_user', JSON.stringify(userData));
   };
 
   const handleLogout = () => {
     setUser(null);
-    localStorage.removeItem('menzapp_user');
+    localStorage.removeItem('marendapp_user');
   };
 
   return (

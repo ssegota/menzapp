@@ -3,8 +3,8 @@
 :root {
   --color-bg: #fffdf5;
   /* Cream/Dough background */
-  --color-primary: #fdda0d;
-  /* Warm Yellow */
+  --color-primary: #e8d05c;
+  /* Softer, Muted Yellow */
   --color-secondary: #f4a460;
   /* Sandy Brown */
   --color-accent: #8b4513;
@@ -102,13 +102,82 @@ textarea:focus {
   text-align: center;
 }
 
-.login-container {
+/* Login Screen Layout & Animation */
+.login-page {
   display: flex;
-  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: var(--color-bg);
+}
+
+.login-logo-side {
+  flex: 1;
+  display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  background-color: #fffdf5;
+  background-color: var(--color-primary);
+  transition: all 1s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.login-form-side {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 1;
+  transition: all 1s cubic-bezier(0.25, 1, 0.5, 1);
+  background-color: var(--color-bg);
+}
+
+.login-page.animating .login-logo-side {
+  flex: 0 0 100vw;
+}
+
+.login-page.animating .login-form-side {
+  flex: 0 0 0vw;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.login-logo {
+  max-width: 80%;
+  max-height: 80vh;
+  object-fit: contain;
+  animation: pulseLogo 2s infinite ease-in-out;
+  transition: transform 1s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.login-page:not(.animating) .login-logo {
+  transform: scale(0.9);
+}
+
+@keyframes pulseLogo {
+  0% {
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.2));
+  }
+
+  50% {
+    filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.6));
+  }
+
+  100% {
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.2));
+  }
+}
+
+@media (max-width: 768px) {
+  .login-page {
+    flex-direction: column;
+  }
+
+  .login-page.animating .login-logo-side {
+    flex: 0 0 100vh;
+  }
+
+  .login-page.animating .login-form-side {
+    flex: 0 0 0vh;
+  }
 }
 
 .menu-item {

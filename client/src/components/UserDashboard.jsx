@@ -10,6 +10,8 @@ const UserDashboard = ({ user, mockTime }) => {
     // State for functionality
     const [confirmModalOpen, setConfirmModalOpen] = useState(false);
     const [selectedMenu, setSelectedMenu] = useState(null);
+    const [orderConfirmed, setOrderConfirmed] = useState(false);
+    const [confirmedOrderCode, setConfirmedOrderCode] = useState('');
 
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [editingOrder, setEditingOrder] = useState(null);
@@ -18,7 +20,9 @@ const UserDashboard = ({ user, mockTime }) => {
     const [settings, setSettings] = useState({
         morningStart: 8, morningEnd: 10,
         afternoonStart: 14, afternoonEnd: 16,
-        afternoonEnabled: true
+        afternoonEnabled: true,
+        morningDeliveryTime: "10:30",
+        afternoonDeliveryTime: "16:30"
     });
 
     const currentDateStr = `${mockTime.getFullYear()}-${String(mockTime.getMonth() + 1).padStart(2, '0')}-${String(mockTime.getDate()).padStart(2, '0')}`;
@@ -88,7 +92,8 @@ const UserDashboard = ({ user, mockTime }) => {
             const data = await res.json();
             if (data.success) {
                 setMessage('Narudžba zabilježena!');
-                setConfirmModalOpen(false);
+                setConfirmedOrderCode(data.order.code);
+                setOrderConfirmed(true);
                 fetchOrders();
             }
         } catch (err) {
@@ -121,36 +126,40 @@ const UserDashboard = ({ user, mockTime }) => {
     // History Logic
     const historyOrders = orders.filter(o => o.userId === user.id && (o.status === 'picked_up' || o.status === 'non_collected'));
 
-    const [activeTab, setActiveTab] = useState('order'); // order, history
+    const [activeTab, setActiveTab] = useState('order'); // order, active_orders, history
+
+    // Centered tab styles
+    const tabStyle = (tabName) => ({
+        flex: 1,
+        background: activeTab === tabName ? 'var(--color-primary)' : '#e0e0e0',
+        color: activeTab === tabName ? 'var(--color-text)' : '#555',
+        textAlign: 'center',
+        padding: '12px',
+        fontWeight: 'bold',
+        fontSize: '1rem',
+        borderRadius: '8px',
+        boxShadow: activeTab === tabName ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+        transition: 'all 0.2s ease-in-out'
+    });
 
     return (
-        <div className="dashboard-grid">
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', gridColumn: '1 / -1' }}>
-                <button
-                    onClick={() => setActiveTab('order')}
-                    style={{
-                        background: activeTab === 'order' ? 'var(--color-primary)' : '#e0e0e0',
-                        color: activeTab === 'order' ? 'var(--color-text)' : '#555'
-                    }}
-                >
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '800px', margin: '0 auto' }}>
+            <div style={{ display: 'flex', gap: '15px', marginBottom: '25px', width: '100%', justifyContent: 'center' }}>
+                <button onClick={() => setActiveTab('order')} style={tabStyle('order')}>
                     Nova Narudžba
                 </button>
-                <button
-                    onClick={() => setActiveTab('history')}
-                    style={{
-                        background: activeTab === 'history' ? 'var(--color-primary)' : '#e0e0e0',
-                        color: activeTab === 'history' ? 'var(--color-text)' : '#555'
-                    }}
-                >
+                <button onClick={() => setActiveTab('active_orders')} style={tabStyle('active_orders')}>
+                    Aktivne Narudžbe
+                </button>
+                <button onClick={() => setActiveTab('history')} style={tabStyle('history')}>
                     Povijest Narudžbi
                 </button>
             </div>
 
             {activeTab === 'order' && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 2fr) 1fr', gap: '20px' }}>
-
+                <div style={{ width: '100%' }}>
                     {/* Menu Selection */}
-                    <div className="card">
+                    <div className="card" style={{ padding: '30px' }}>
                         <h2 className="title" style={{ fontSize: '1.8rem' }}>Današnji Meni</h2>
 
                         <div style={{
@@ -200,11 +209,15 @@ const UserDashboard = ({ user, mockTime }) => {
                             </div>
                         )}
                     </div>
+                </div>
+            )}
 
+            {activeTab === 'active_orders' && (
+                <div style={{ width: '100%' }}>
                     {/* Orders List */}
-                    <div className="card">
-                        <h2 className="title" style={{ fontSize: '1.5rem' }}>Moje Narudžbe</h2>
-                        {myActiveOrders.length === 0 ? <p style={{ textAlign: 'center', color: '#888' }}>Nema aktivnih narudžbi.</p> : (
+                    <div className="card" style={{ padding: '30px' }}>
+                        <h2 className="title" style={{ fontSize: '1.8rem', textAlign: 'center' }}>Moje Aktivne Narudžbe</h2>
+                        {myActiveOrders.length === 0 ? <p style={{ textAlign: 'center', color: '#888', fontSize: '1.1rem' }}>Nema aktivnih narudžbi.</p> : (
                             <ul style={{ listStyle: 'none', padding: 0 }}>
                                 {myActiveOrders.map(order => {
                                     const menu = menus.find(m => m.id === order.menuId);
@@ -249,9 +262,9 @@ const UserDashboard = ({ user, mockTime }) => {
             )}
 
             {activeTab === 'history' && (
-                <div className="card" style={{ gridColumn: '1 / -1' }}>
-                    <h2 className="title">Povijest Narudžbi</h2>
-                    {historyOrders.length === 0 ? <p style={{ textAlign: 'center' }}>Nema povijesti narudžbi.</p> : (
+                <div className="card" style={{ width: '100%', padding: '30px' }}>
+                    <h2 className="title" style={{ textAlign: 'center' }}>Povijest Narudžbi</h2>
+                    {historyOrders.length === 0 ? <p style={{ textAlign: 'center', fontSize: '1.1rem' }}>Nema povijesti narudžbi.</p> : (
                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                             <thead>
                                 <tr style={{ background: '#f5f5f5', textAlign: 'left' }}>
@@ -302,17 +315,49 @@ const UserDashboard = ({ user, mockTime }) => {
             {/* Confirmation Modal */}
             {confirmModalOpen && selectedMenu && (
                 <div className="modal-overlay">
-                    <div className="modal-content" style={{ textAlign: 'center' }}>
-                        <h3 style={{ marginTop: 0 }}>Potvrda narudžbe</h3>
-                        <p>Želite li naručiti:</p>
-                        <div style={{ fontSize: '1.2rem', color: 'var(--color-accent)' }}>
-                            <ReactMarkdown>{selectedMenu.text}</ReactMarkdown>
-                        </div>
+                    <div className="modal-content" style={{ textAlign: 'center', maxWidth: orderConfirmed ? '800px' : '500px' }}>
+                        {!orderConfirmed ? (
+                            <>
+                                <h3 style={{ marginTop: 0 }}>Potvrda narudžbe</h3>
+                                <p>Želite li naručiti:</p>
+                                <div style={{ fontSize: '1.2rem', color: 'var(--color-accent)' }}>
+                                    <ReactMarkdown>{selectedMenu.text}</ReactMarkdown>
+                                </div>
 
-                        <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '20px' }}>
-                            <button onClick={() => setConfirmModalOpen(false)} style={{ background: '#eee', color: '#333' }}>Odustani</button>
-                            <button onClick={confirmOrder}>{loading ? 'Slanje...' : 'Potvrdi'}</button>
-                        </div>
+                                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '20px' }}>
+                                    <button onClick={() => setConfirmModalOpen(false)} style={{ background: '#eee', color: '#333' }}>Odustani</button>
+                                    <button onClick={confirmOrder}>{loading ? 'Slanje...' : 'Potvrdi'}</button>
+                                </div>
+                            </>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '30px', textAlign: 'left', flexWrap: 'wrap', justifyContent: 'center' }}>
+                                <img src="/marendapp-2.png" alt="Order Confirmed Logo" style={{ maxWidth: '280px', width: '100%', flex: '1 1 200px' }} />
+
+                                <div style={{ display: 'flex', flexDirection: 'column', flex: '2 1 300px' }}>
+                                    <h3 style={{ marginTop: 0, color: 'var(--color-success)', fontSize: '2rem' }}>Narudžba potvrđena!</h3>
+
+                                    <p style={{ fontSize: '1.25rem', lineHeight: '1.6' }}>
+                                        Narudžba je primljena i bit će spremna za preuzimanje oko{' '}
+                                        <strong style={{ color: 'var(--color-primary)', background: '#333', padding: '4px 10px', borderRadius: '6px', whiteSpace: 'nowrap' }}>
+                                            {activeSlot === 'afternoon' ? (settings.afternoonDeliveryTime || '16:30') : (settings.morningDeliveryTime || '10:30')}
+                                        </strong>!
+                                    </p>
+
+                                    <div style={{ marginTop: '20px', textAlign: 'center', background: '#fffdf5', border: '3px dashed var(--color-primary)', padding: '20px', borderRadius: '12px' }}>
+                                        <p style={{ margin: '0 0 10px 0', fontSize: '1.2rem', color: '#555', fontWeight: 'bold' }}>Vaš kod za preuzimanje:</p>
+                                        <div style={{ fontSize: '3.5rem', fontWeight: '900', letterSpacing: '6px', color: 'var(--color-accent)' }}>
+                                            {confirmedOrderCode}
+                                        </div>
+                                    </div>
+
+                                    <div style={{ marginTop: '30px', display: 'flex', justifyContent: 'flex-end' }}>
+                                        <button onClick={() => { setConfirmModalOpen(false); setOrderConfirmed(false); }} style={{ padding: '12px 40px', fontSize: '1.2rem' }}>
+                                            Zatvori
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

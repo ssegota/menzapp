@@ -248,8 +248,12 @@ app.get('/api/settings', (req, res) => {
         morningEnd: 10,
         afternoonStart: 14,
         afternoonEnd: 16,
-        afternoonEnabled: true
+        afternoonEnabled: true,
+        morningDeliveryTime: "10:30",
+        afternoonDeliveryTime: "16:30"
     };
+    if (!settings.morningDeliveryTime) settings.morningDeliveryTime = "10:30";
+    if (!settings.afternoonDeliveryTime) settings.afternoonDeliveryTime = "16:30";
     res.json(settings);
 });
 

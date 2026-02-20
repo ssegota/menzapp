@@ -1,6 +1,6 @@
-# Menzapp
+# MarendApp
 
-Menzapp is a web application for managing and ordering meals (menus) in a canteen or similar dining facility. It features a React frontend and an Express Node.js backend.
+MarendApp is a web application for managing and ordering meals (menus) in a canteen or similar dining facility. It features a React frontend and an Express Node.js backend.
 
 ## Project Structure and Files
 

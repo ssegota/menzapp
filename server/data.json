@@ -115,6 +115,18 @@
       "date": "2026-02-23",
       "slot": "afternoon",
       "text": "Test jelo 3"
+    },
+    {
+      "id": "1771584632720jfv8hqun7",
+      "date": "2026-02-24",
+      "slot": "morning",
+      "text": "Test jelo"
+    },
+    {
+      "id": "17715846407446bh815itr",
+      "date": "2026-02-24",
+      "slot": "morning",
+      "text": "Test jelo 2"
     }
   ],
   "orders": [
@@ -146,7 +158,7 @@
       "date": "2025-02-24",
       "slot": "morning",
       "code": "509228",
-      "status": "non_collected",
+      "status": "archived",
       "timestamp": "2026-02-19T19:19:36.541Z",
       "menuText": "Burek sa sirom"
     },
@@ -157,7 +169,7 @@
       "date": "2026-02-24",
       "slot": "morning",
       "code": "759354",
-      "status": "non_collected",
+      "status": "archived",
       "timestamp": "2026-02-19T19:22:19.464Z",
       "menuText": "Piletina na žaru, riža, rigojanči"
     },
@@ -179,7 +191,7 @@
       "date": "2026-02-20",
       "slot": "morning",
       "code": "341269",
-      "status": "non_collected",
+      "status": "archived",
       "timestamp": "2026-02-19T19:29:05.113Z",
       "menuText": "Pohano svinjetina, pomfrit, puding sa čokoladom"
     },
@@ -212,7 +224,7 @@
       "date": "2026-02-23",
       "slot": "morning",
       "code": "319349",
-      "status": "non_collected",
+      "status": "archived",
       "timestamp": "2026-02-19T19:34:28.007Z",
       "menuText": "Test jelo 2"
     },
@@ -226,6 +238,39 @@
       "status": "picked_up",
       "timestamp": "2026-02-19T19:34:36.463Z",
       "menuText": "Test jelo 3"
+    },
+    {
+      "id": "1771605328188",
+      "userId": 3,
+      "menuId": "1771584632720jfv8hqun7",
+      "date": "2026-02-24",
+      "slot": "morning",
+      "code": "745811",
+      "status": "non_collected",
+      "timestamp": "2026-02-20T16:35:28.187Z",
+      "menuText": "Test jelo"
+    },
+    {
+      "id": "1771605659801",
+      "userId": 3,
+      "menuId": "1771584632720jfv8hqun7",
+      "date": "2026-02-24",
+      "slot": "morning",
+      "code": "696893",
+      "status": "picked_up",
+      "timestamp": "2026-02-20T16:40:59.801Z",
+      "menuText": "Test jelo"
+    },
+    {
+      "id": "1771605710842",
+      "userId": 3,
+      "menuId": "17715846407446bh815itr",
+      "date": "2026-02-24",
+      "slot": "morning",
+      "code": "375574",
+      "status": "pending",
+      "timestamp": "2026-02-20T16:41:50.842Z",
+      "menuText": "Test jelo 2"
     }
   ],
   "settings": {
@@ -233,6 +278,8 @@
     "morningEnd": 10,
     "afternoonStart": 14,
     "afternoonEnd": 16,
-    "afternoonEnabled": true
+    "afternoonEnabled": true,
+    "morningDeliveryTime": "12:00",
+    "afternoonDeliveryTime": "16:30"
   }
 }
