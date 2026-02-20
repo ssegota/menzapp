@@ -1,0 +1,238 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "role": "admin",
+      "name": "Admin"
+    },
+    {
+      "id": 2,
+      "username": "korisnik",
+      "role": "user",
+      "name": "Korisnik"
+    },
+    {
+      "id": 3,
+      "username": "korisnik1",
+      "role": "user",
+      "name": "Korisnik 1"
+    },
+    {
+      "id": 4,
+      "username": "korisnik2",
+      "role": "user",
+      "name": "Korisnik 2"
+    },
+    {
+      "id": 5,
+      "username": "korisnik3",
+      "role": "user",
+      "name": "Korisnik 3"
+    }
+  ],
+  "menus": [
+    {
+      "id": "1771524543442nkng3ns0n",
+      "date": "2026-02-18",
+      "slot": "afternoon",
+      "text": "Kuhano meso, kava"
+    },
+    {
+      "id": "1771524550470c9yj3aald",
+      "date": "2026-02-18",
+      "slot": "afternoon",
+      "text": "čaj, kolači"
+    },
+    {
+      "id": "1771525242774zcyzau1kg",
+      "date": "2026-02-16",
+      "slot": "morning",
+      "text": "Čokolada, *burek*"
+    },
+    {
+      "id": "1771527325116klgjse79m",
+      "date": "2026-02-22",
+      "slot": "morning",
+      "text": "Pizza burek, ispovijed"
+    },
+    {
+      "id": "1771528005983gnmb7oogw",
+      "date": "2026-02-24",
+      "slot": "afternoon",
+      "text": "Pohana svinjetina, pomfrit, puding od vanilije"
+    },
+    {
+      "id": "1771528020985rh6e3pywj",
+      "date": "2026-02-24",
+      "slot": "afternoon",
+      "text": "Piletina na žaru, pomfrit, rigojanči"
+    },
+    {
+      "id": "17715287551028ux1de64l",
+      "date": "2025-02-24",
+      "slot": "morning",
+      "text": "Burek sa sirom"
+    },
+    {
+      "id": "1771529115871b9oqxgvp9",
+      "date": "2026-02-20",
+      "slot": "morning",
+      "text": "Pohano svinjetina, pomfrit, puding sa čokoladom"
+    },
+    {
+      "id": "1771529134141co347orrq",
+      "date": "2026-02-20",
+      "slot": "morning",
+      "text": "Piletina na žaru, riža, rigojanči"
+    },
+    {
+      "id": "1771529203290tk4u8smgo",
+      "date": "2026-02-20",
+      "slot": "afternoon",
+      "text": "Burek sa mesom, kolač"
+    },
+    {
+      "id": "1771529213588pycc6ykib",
+      "date": "2026-02-20",
+      "slot": "afternoon",
+      "text": "Tortilja od piletine, salata, kroasan"
+    },
+    {
+      "id": "1771529623977s3sjmncn1",
+      "date": "2026-02-23",
+      "slot": "morning",
+      "text": "Test jelo 1"
+    },
+    {
+      "id": "1771529628901h6juu9spy",
+      "date": "2026-02-23",
+      "slot": "morning",
+      "text": "Test jelo 2"
+    },
+    {
+      "id": "17715296336216lk6d3i5a",
+      "date": "2026-02-23",
+      "slot": "afternoon",
+      "text": "Test jelo 3"
+    }
+  ],
+  "orders": [
+    {
+      "id": "1771524638659",
+      "userId": 4,
+      "menuId": "1771524531377n876mygif",
+      "date": "2026-02-18",
+      "slot": "morning",
+      "code": "440216",
+      "status": "picked_up",
+      "timestamp": "2026-02-19T18:10:38.658Z"
+    },
+    {
+      "id": "1771528157723",
+      "userId": 4,
+      "menuId": "1771527931105ayu0eebs5",
+      "date": "2026-02-24",
+      "slot": "morning",
+      "code": "391630",
+      "status": "picked_up",
+      "timestamp": "2026-02-19T19:09:17.723Z",
+      "menuText": "Piletina na žaru, riža, rigojanči"
+    },
+    {
+      "id": "1771528776541",
+      "userId": 3,
+      "menuId": "17715287551028ux1de64l",
+      "date": "2025-02-24",
+      "slot": "morning",
+      "code": "509228",
+      "status": "non_collected",
+      "timestamp": "2026-02-19T19:19:36.541Z",
+      "menuText": "Burek sa sirom"
+    },
+    {
+      "id": "1771528939464",
+      "userId": 3,
+      "menuId": "1771527931105ayu0eebs5",
+      "date": "2026-02-24",
+      "slot": "morning",
+      "code": "759354",
+      "status": "non_collected",
+      "timestamp": "2026-02-19T19:22:19.464Z",
+      "menuText": "Piletina na žaru, riža, rigojanči"
+    },
+    {
+      "id": "1771529323897",
+      "userId": 3,
+      "menuId": "1771529115871b9oqxgvp9",
+      "date": "2026-02-20",
+      "slot": "morning",
+      "code": "236809",
+      "status": "picked_up",
+      "timestamp": "2026-02-19T19:28:43.897Z",
+      "menuText": "Pohano svinjetina, pomfrit, puding sa čokoladom"
+    },
+    {
+      "id": "1771529345113",
+      "userId": 3,
+      "menuId": "1771529115871b9oqxgvp9",
+      "date": "2026-02-20",
+      "slot": "morning",
+      "code": "341269",
+      "status": "non_collected",
+      "timestamp": "2026-02-19T19:29:05.113Z",
+      "menuText": "Pohano svinjetina, pomfrit, puding sa čokoladom"
+    },
+    {
+      "id": "1771529367541",
+      "userId": 4,
+      "menuId": "1771529134141co347orrq",
+      "date": "2026-02-20",
+      "slot": "morning",
+      "code": "842772",
+      "status": "picked_up",
+      "timestamp": "2026-02-19T19:29:27.541Z",
+      "menuText": "Piletina na žaru, riža, rigojanči"
+    },
+    {
+      "id": "1771529655818",
+      "userId": 3,
+      "menuId": "1771529623977s3sjmncn1",
+      "date": "2026-02-23",
+      "slot": "morning",
+      "code": "508699",
+      "status": "picked_up",
+      "timestamp": "2026-02-19T19:34:15.818Z",
+      "menuText": "Test jelo 1"
+    },
+    {
+      "id": "1771529668007",
+      "userId": 4,
+      "menuId": "1771529628901h6juu9spy",
+      "date": "2026-02-23",
+      "slot": "morning",
+      "code": "319349",
+      "status": "non_collected",
+      "timestamp": "2026-02-19T19:34:28.007Z",
+      "menuText": "Test jelo 2"
+    },
+    {
+      "id": "1771529676463",
+      "userId": 4,
+      "menuId": "17715296336216lk6d3i5a",
+      "date": "2026-02-23",
+      "slot": "afternoon",
+      "code": "738632",
+      "status": "picked_up",
+      "timestamp": "2026-02-19T19:34:36.463Z",
+      "menuText": "Test jelo 3"
+    }
+  ],
+  "settings": {
+    "morningStart": 8,
+    "morningEnd": 10,
+    "afternoonStart": 14,
+    "afternoonEnd": 16,
+    "afternoonEnabled": true
+  }
+}

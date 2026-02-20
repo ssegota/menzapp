@@ -1,0 +1,188 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --color-bg: #fffdf5;
+  /* Cream/Dough background */
+  --color-primary: #fdda0d;
+  /* Warm Yellow */
+  --color-secondary: #f4a460;
+  /* Sandy Brown */
+  --color-accent: #8b4513;
+  /* Saddle Brown */
+  --color-text: #3e2723;
+  /* Dark Brown text */
+  --color-card-bg: #ffffff;
+  --color-success: #66bb6a;
+  /* Soft Green */
+  --color-danger: #ef5350;
+  /* Soft Red */
+  --font-main: 'Inter', sans-serif;
+  --radius-lg: 12px;
+  --shadow-soft: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-main);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+button {
+  border: none;
+  background: var(--color-primary);
+  color: var(--color-text);
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-family: var(--font-main);
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+button:hover {
+  filter: brightness(0.95);
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+input,
+select,
+textarea {
+  border: 1px solid #ddd;
+  border-radius: var(--radius-lg);
+  padding: 10px 14px;
+  font-family: var(--font-main);
+  outline: none;
+  transition: border-color 0.2s;
+  background: white;
+  color: var(--color-text);
+  box-sizing: border-box;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(253, 218, 13, 0.2);
+}
+
+.card {
+  background: var(--color-card-bg);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid #f0f0f0;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  text-align: center;
+  color: var(--color-accent);
+  margin-bottom: 1.5rem;
+}
+
+.subtitle {
+  font-size: 1.1rem;
+  color: var(--color-secondary);
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.login-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #fffdf5;
+}
+
+.menu-item {
+  position: relative;
+  transition: border-color 0.2s;
+  cursor: pointer;
+}
+
+.menu-item:hover {
+  border-color: var(--color-primary);
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+}
+
+/* Responsive Grid */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(300px, 2fr) 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Mobile Tweaks */
+@media (max-width: 600px) {
+  .card {
+    padding: 16px;
+  }
+
+  button {
+    padding: 12px 24px;
+    /* Larger touch target */
+    width: 100%;
+    /* Full width buttons often better on mobile */
+    margin-bottom: 5px;
+  }
+
+  input,
+  select,
+  textarea {
+    padding: 12px;
+    /* Larger tap area */
+  }
+
+  .modal-content {
+    width: 95%;
+    padding: 20px;
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
+}
