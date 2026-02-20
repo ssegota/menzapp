@@ -338,7 +338,7 @@ const UserDashboard = ({ user, mockTime }) => {
 
                                     <p style={{ fontSize: '1.25rem', lineHeight: '1.6' }}>
                                         Narudžba je primljena i bit će spremna za preuzimanje oko{' '}
-                                        <strong style={{ color: 'var(--color-primary)', background: '#333', padding: '4px 10px', borderRadius: '6px', whiteSpace: 'nowrap' }}>
+                                        <strong>
                                             {activeSlot === 'afternoon' ? (settings.afternoonDeliveryTime || '16:30') : (settings.morningDeliveryTime || '10:30')}
                                         </strong>!
                                     </p>
