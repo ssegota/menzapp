@@ -30,7 +30,11 @@ const UserDashboard = ({ user, mockTime }) => {
 
     // Translation helpers
     const getSlotName = (slot) => slot === 'morning' ? 'Jutarnji' : 'Popodnevni';
-    const getDayName = (dateStr) => new Date(dateStr).toLocaleDateString('hr-HR', { weekday: 'long' });
+    const formatDateEU = (dateStr) => {
+        if (!dateStr) return '';
+        const [y, m, d] = dateStr.split('-');
+        return `${d}/${m}/${y}`;
+    };
 
     useEffect(() => {
         fetchMenus();
@@ -173,12 +177,12 @@ const UserDashboard = ({ user, mockTime }) => {
                         }}>
                             {activeSlot
                                 ? `Trenutno: ${getSlotName(activeSlot)} termin`
-                                : `Kuhinja ne prima narudžbe. (Sati: ${currentHour}:00)`
+                                : `Kuhinja ne prima narudžbe. (Sati: ${String(currentHour).padStart(2, '0')}:00)`
                             }
                             {!activeSlot && (
                                 <p style={{ fontWeight: 'normal', fontSize: '0.9rem', margin: '5px 0 0' }}>
-                                    Jutro: {settings.morningStart}:00-{settings.morningEnd}:00
-                                    {settings.afternoonEnabled && ` & Popodne: ${settings.afternoonStart}:00-${settings.afternoonEnd}:00`}
+                                    Jutro: {String(settings.morningStart).padStart(2, '0')}:00-{String(settings.morningEnd).padStart(2, '0')}:00
+                                    {settings.afternoonEnabled && ` & Popodne: ${String(settings.afternoonStart).padStart(2, '0')}:00-${String(settings.afternoonEnd).padStart(2, '0')}:00`}
                                 </p>
                             )}
                         </div>
@@ -291,7 +295,7 @@ const UserDashboard = ({ user, mockTime }) => {
                                                 <td style={{ padding: '10px' }}>
                                                     {menu ? <ReactMarkdown>{menu.text}</ReactMarkdown> : <ReactMarkdown>{order.menuText || 'Nepoznato jelo'}</ReactMarkdown>}
                                                 </td>
-                                                <td style={{ padding: '10px' }}>{order.date} ({getSlotName(order.slot)})</td>
+                                                <td style={{ padding: '10px' }}>{formatDateEU(order.date)} ({getSlotName(order.slot)})</td>
                                                 <td style={{ padding: '10px' }}>
                                                     <span style={{
                                                         background: statusBg,

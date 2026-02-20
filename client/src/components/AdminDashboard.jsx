@@ -61,6 +61,12 @@ const AdminDashboard = ({ mockTime }) => {
         } catch (err) { }
     };
 
+    const formatDateEU = (dateStr) => {
+        if (!dateStr) return '';
+        const [y, m, d] = dateStr.split('-');
+        return `${d}/${m}/${y}`;
+    };
+
     // Menu Handlers
     const handleAddMenu = async (e) => {
         e.preventDefault();
@@ -157,7 +163,7 @@ const AdminDashboard = ({ mockTime }) => {
             + nonCollected.map(o => {
                 const menu = menus.find(m => m.id === o.menuId);
                 const menuText = (menu ? menu.text : o.menuText || 'Unknown').replace(/,/g, '');
-                return `${o.id},${o.userId},${menuText},${o.date},${o.slot},${o.code}`;
+                return `${o.id},${o.userId},${menuText},${formatDateEU(o.date)},${o.slot},${o.code}`;
             }).join("\n");
 
         const encodedUri = encodeURI(csvContent);
@@ -292,7 +298,9 @@ const AdminDashboard = ({ mockTime }) => {
                     </div>
 
                     <div className="card" style={{ padding: '30px', textAlign: 'center', flex: '1 1 400px' }}>
-                        <h3 style={{ marginTop: 0, fontSize: '1.5rem', color: 'var(--color-accent)' }}>Jela ({selectedDate.toLocaleDateString()})</h3>
+                        <h3 style={{ marginTop: 0, fontSize: '1.5rem', color: 'var(--color-accent)' }}>
+                            Jela ({formatDateEU(`${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`)})
+                        </h3>
 
                         {currentDayMenus.length === 0 ? <p style={{ color: '#888' }}>Nema jela.</p> : (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -371,7 +379,7 @@ const AdminDashboard = ({ mockTime }) => {
                                             {menu ? <ReactMarkdown>{menu.text}</ReactMarkdown> : <ReactMarkdown>{order.menuText || 'Nepoznato jelo (obrisano)'}</ReactMarkdown>}
                                         </div>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px' }}>
-                                            <span style={{ fontSize: '0.8rem', color: '#888' }}>{order.date} | {order.slot}</span>
+                                            <span style={{ fontSize: '0.8rem', color: '#888' }}>{formatDateEU(order.date)} | {order.slot}</span>
                                             <span style={{ fontWeight: 'bold', background: '#333', color: 'var(--color-primary)', padding: '2px 6px', borderRadius: '4px' }}>
                                                 {order.code}
                                             </span>
@@ -413,7 +421,7 @@ const AdminDashboard = ({ mockTime }) => {
                                             <tr key={order.id} style={{ borderBottom: '1px solid #eee' }}>
                                                 <td style={{ padding: '10px' }}>{order.userId}</td>
                                                 <td style={{ padding: '10px' }}>{menu ? <ReactMarkdown>{menu.text}</ReactMarkdown> : <ReactMarkdown>{order.menuText || 'Nepoznato jelo (obrisano)'}</ReactMarkdown>}</td>
-                                                <td style={{ padding: '10px', whiteSpace: 'nowrap' }}>{order.date} ({order.slot})</td>
+                                                <td style={{ padding: '10px', whiteSpace: 'nowrap' }}>{formatDateEU(order.date)} ({order.slot})</td>
                                                 <td style={{ padding: '10px', fontWeight: 'bold' }}>{order.code}</td>
                                             </tr>
                                         );
