@@ -9,7 +9,7 @@ const Login = ({ onLogin }) => {
     useEffect(() => {
         const timer = setTimeout(() => {
             setIsAnimating(false);
-        }, 500); // 0.5 seconds delay
+        }, 50); // 0.05 seconds delay
         return () => clearTimeout(timer);
     }, []);
 

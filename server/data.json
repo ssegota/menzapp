@@ -246,7 +246,7 @@
       "date": "2026-02-24",
       "slot": "morning",
       "code": "745811",
-      "status": "non_collected",
+      "status": "archived",
       "timestamp": "2026-02-20T16:35:28.187Z",
       "menuText": "Test jelo"
     },
@@ -268,7 +268,7 @@
       "date": "2026-02-24",
       "slot": "morning",
       "code": "375574",
-      "status": "pending",
+      "status": "picked_up",
       "timestamp": "2026-02-20T16:41:50.842Z",
       "menuText": "Test jelo 2"
     }
@@ -278,8 +278,8 @@
     "morningEnd": 10,
     "afternoonStart": 14,
     "afternoonEnd": 16,
-    "afternoonEnabled": true,
-    "morningDeliveryTime": "12:00",
+    "afternoonEnabled": false,
+    "morningDeliveryTime": "12:30",
     "afternoonDeliveryTime": "16:30"
   }
 }
