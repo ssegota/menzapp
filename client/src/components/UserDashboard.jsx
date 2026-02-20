@@ -265,49 +265,52 @@ const UserDashboard = ({ user, mockTime }) => {
                 <div className="card" style={{ width: '100%', padding: '30px' }}>
                     <h2 className="title" style={{ textAlign: 'center' }}>Povijest Narudžbi</h2>
                     {historyOrders.length === 0 ? <p style={{ textAlign: 'center', fontSize: '1.1rem' }}>Nema povijesti narudžbi.</p> : (
-                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                            <thead>
-                                <tr style={{ background: '#f5f5f5', textAlign: 'left' }}>
-                                    <th style={{ padding: '10px' }}>Jelo</th>
-                                    <th style={{ padding: '10px' }}>Datum</th>
-                                    <th style={{ padding: '10px' }}>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {historyOrders.map(order => {
-                                    const menu = menus.find(m => m.id === order.menuId);
-                                    const statusText = order.status === 'picked_up' ? 'Preuzeto' :
-                                        order.status === 'non_collected' ? 'Nepreuzeto' :
-                                            'Arhivirano';
-                                    const statusColor = order.status === 'picked_up' ? '#2e7d32' :
-                                        order.status === 'non_collected' ? '#c62828' :
-                                            '#757575'; // Grey for archived
-                                    const statusBg = order.status === 'picked_up' ? '#e8f5e9' :
-                                        order.status === 'non_collected' ? '#ffebee' :
-                                            '#f5f5f5'; // Light grey for archived
-                                    return (
-                                        <tr key={order.id} style={{ borderBottom: '1px solid #eee' }}>
-                                            <td style={{ padding: '10px' }}>
-                                                {menu ? <ReactMarkdown>{menu.text}</ReactMarkdown> : <ReactMarkdown>{order.menuText || 'Nepoznato jelo'}</ReactMarkdown>}
-                                            </td>
-                                            <td style={{ padding: '10px' }}>{order.date} ({getSlotName(order.slot)})</td>
-                                            <td style={{ padding: '10px' }}>
-                                                <span style={{
-                                                    background: statusBg,
-                                                    color: statusColor,
-                                                    padding: '4px 8px',
-                                                    borderRadius: '6px',
-                                                    fontWeight: 'bold',
-                                                    fontSize: '0.8rem'
-                                                }}>
-                                                    {statusText}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
+                        <div style={{ overflowX: 'auto', width: '100%', WebkitOverflowScrolling: 'touch' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '400px' }}>
+                                <thead>
+                                    <tr style={{ background: '#f5f5f5', textAlign: 'left' }}>
+                                        <th style={{ padding: '10px' }}>Jelo</th>
+                                        <th style={{ padding: '10px' }}>Datum</th>
+                                        <th style={{ padding: '10px' }}>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {historyOrders.map(order => {
+                                        const menu = menus.find(m => m.id === order.menuId);
+                                        const statusText = order.status === 'picked_up' ? 'Preuzeto' :
+                                            order.status === 'non_collected' ? 'Nepreuzeto' :
+                                                'Arhivirano';
+                                        const statusColor = order.status === 'picked_up' ? '#2e7d32' :
+                                            order.status === 'non_collected' ? '#c62828' :
+                                                '#757575'; // Grey for archived
+                                        const statusBg = order.status === 'picked_up' ? '#e8f5e9' :
+                                            order.status === 'non_collected' ? '#ffebee' :
+                                                '#f5f5f5'; // Light grey for archived
+                                        return (
+                                            <tr key={order.id} style={{ borderBottom: '1px solid #eee' }}>
+                                                <td style={{ padding: '10px' }}>
+                                                    {menu ? <ReactMarkdown>{menu.text}</ReactMarkdown> : <ReactMarkdown>{order.menuText || 'Nepoznato jelo'}</ReactMarkdown>}
+                                                </td>
+                                                <td style={{ padding: '10px' }}>{order.date} ({getSlotName(order.slot)})</td>
+                                                <td style={{ padding: '10px' }}>
+                                                    <span style={{
+                                                        background: statusBg,
+                                                        color: statusColor,
+                                                        padding: '4px 8px',
+                                                        borderRadius: '6px',
+                                                        fontWeight: 'bold',
+                                                        fontSize: '0.8rem',
+                                                        whiteSpace: 'nowrap'
+                                                    }}>
+                                                        {statusText}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
                     )}
                 </div>
             )}

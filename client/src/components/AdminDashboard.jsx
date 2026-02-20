@@ -396,29 +396,31 @@ const AdminDashboard = ({ mockTime }) => {
                     </div>
 
                     {nonCollectedOrders.length === 0 ? <p style={{ textAlign: 'center' }}>Prazno.</p> : (
-                        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
-                            <thead>
-                                <tr style={{ background: '#f5f5f5', textAlign: 'left' }}>
-                                    <th style={{ padding: '10px' }}>Korisnik</th>
-                                    <th style={{ padding: '10px' }}>Jelo</th>
-                                    <th style={{ padding: '10px' }}>Datum</th>
-                                    <th style={{ padding: '10px' }}>Kod</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {nonCollectedOrders.map(order => {
-                                    const menu = menus.find(m => m.id === order.menuId);
-                                    return (
-                                        <tr key={order.id} style={{ borderBottom: '1px solid #eee' }}>
-                                            <td style={{ padding: '10px' }}>{order.userId}</td>
-                                            <td style={{ padding: '10px' }}>{menu ? <ReactMarkdown>{menu.text}</ReactMarkdown> : <ReactMarkdown>{order.menuText || 'Nepoznato jelo (obrisano)'}</ReactMarkdown>}</td>
-                                            <td style={{ padding: '10px' }}>{order.date} ({order.slot})</td>
-                                            <td style={{ padding: '10px' }}>{order.code}</td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
+                        <div style={{ overflowX: 'auto', width: '100%', WebkitOverflowScrolling: 'touch' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px', minWidth: '500px' }}>
+                                <thead>
+                                    <tr style={{ background: '#f5f5f5', textAlign: 'left' }}>
+                                        <th style={{ padding: '10px' }}>Korisnik</th>
+                                        <th style={{ padding: '10px' }}>Jelo</th>
+                                        <th style={{ padding: '10px' }}>Datum</th>
+                                        <th style={{ padding: '10px' }}>Kod</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {nonCollectedOrders.map(order => {
+                                        const menu = menus.find(m => m.id === order.menuId);
+                                        return (
+                                            <tr key={order.id} style={{ borderBottom: '1px solid #eee' }}>
+                                                <td style={{ padding: '10px' }}>{order.userId}</td>
+                                                <td style={{ padding: '10px' }}>{menu ? <ReactMarkdown>{menu.text}</ReactMarkdown> : <ReactMarkdown>{order.menuText || 'Nepoznato jelo (obrisano)'}</ReactMarkdown>}</td>
+                                                <td style={{ padding: '10px', whiteSpace: 'nowrap' }}>{order.date} ({order.slot})</td>
+                                                <td style={{ padding: '10px', fontWeight: 'bold' }}>{order.code}</td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
                     )}
                 </div>
             )}
