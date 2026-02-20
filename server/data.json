@@ -127,6 +127,12 @@
       "date": "2026-02-24",
       "slot": "morning",
       "text": "Test jelo 2"
+    },
+    {
+      "id": "1771608256411yi1ojigr4",
+      "date": "2026-02-24",
+      "slot": "morning",
+      "text": "Test Jelo 3"
     }
   ],
   "orders": [
@@ -279,7 +285,7 @@
       "date": "2026-02-24",
       "slot": "morning",
       "code": "672286",
-      "status": "pending",
+      "status": "picked_up",
       "timestamp": "2026-02-20T16:58:01.729Z",
       "menuText": "Test jelo"
     },
@@ -290,7 +296,7 @@
       "date": "2026-02-24",
       "slot": "morning",
       "code": "594074",
-      "status": "pending",
+      "status": "archived",
       "timestamp": "2026-02-20T17:08:19.674Z",
       "menuText": "Test jelo"
     },
@@ -301,9 +307,42 @@
       "date": "2026-02-24",
       "slot": "morning",
       "code": "496616",
-      "status": "pending",
+      "status": "archived",
       "timestamp": "2026-02-20T17:16:00.786Z",
       "menuText": "Test jelo 2"
+    },
+    {
+      "id": "1771608273690",
+      "userId": 3,
+      "menuId": "1771584632720jfv8hqun7",
+      "date": "2026-02-24",
+      "slot": "morning",
+      "code": "979482",
+      "status": "picked_up",
+      "timestamp": "2026-02-20T17:24:33.689Z",
+      "menuText": "Test jelo"
+    },
+    {
+      "id": "1771608876206",
+      "userId": 2,
+      "menuId": "1771584632720jfv8hqun7",
+      "date": "2026-02-24",
+      "slot": "morning",
+      "code": "372695",
+      "status": "pending",
+      "timestamp": "2026-02-20T17:34:36.206Z",
+      "menuText": "Test jelo"
+    },
+    {
+      "id": "1771608899399",
+      "userId": 2,
+      "menuId": "1771608256411yi1ojigr4",
+      "date": "2026-02-24",
+      "slot": "morning",
+      "code": "856536",
+      "status": "pending",
+      "timestamp": "2026-02-20T17:34:59.399Z",
+      "menuText": "Test Jelo 3"
     }
   ],
   "settings": {
