@@ -1,12 +1,16 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const fs = require('fs');
+const { OAuth2Client } = require('google-auth-library');
 const path = require('path');
 
 const app = express();
 const PORT = 3000;
 const DATA_FILE = path.join(__dirname, 'data.json');
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
+const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -264,6 +268,61 @@ app.post('/api/settings', (req, res) => {
     data.settings = settings;
     writeData(data);
     res.json({ success: true });
+});
+
+// Google OAuth Login
+app.post('/api/auth/google', async (req, res) => {
+    const { credential } = req.body;
+
+    if (!credential) {
+        return res.status(400).json({ error: "Token nije poslan" });
+    }
+
+    if (!googleClient) {
+        return res.status(500).json({ error: "Google OAuth nije konfiguriran na serveru" });
+    }
+
+    try {
+        const ticket = await googleClient.verifyIdToken({
+            idToken: credential,
+            audience: GOOGLE_CLIENT_ID,
+        });
+
+        const payload = ticket.getPayload();
+        const { email, name, picture, sub: googleId } = payload;
+
+        const data = readData();
+
+        // Look up existing user by email
+        let user = data.users.find(u => u.email === email);
+
+        if (!user) {
+            // Auto-register new Google user
+            const newId = data.users.length > 0
+                ? Math.max(...data.users.map(u => typeof u.id === 'number' ? u.id : 0)) + 1
+                : 1;
+
+            user = {
+                id: newId,
+                username: email,
+                name: name || email.split('@')[0],
+                email: email,
+                picture: picture || null,
+                role: 'user',
+                authProvider: 'google',
+                googleId: googleId,
+            };
+
+            data.users.push(user);
+            writeData(data);
+            console.log(`New Google user registered: ${email}`);
+        }
+
+        res.json({ success: true, user });
+    } catch (err) {
+        console.error('Google token verification failed:', err.message);
+        res.status(401).json({ error: "Nevažeći Google token" });
+    }
 });
 
 // Login (Dynamic)

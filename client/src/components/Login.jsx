@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { GoogleLogin } from '@react-oauth/google';
 
 const Login = ({ onLogin }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isAnimating, setIsAnimating] = useState(true);
+    const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -34,6 +38,34 @@ const Login = ({ onLogin }) => {
         }
     };
 
+    const handleGoogleSuccess = async (credentialResponse) => {
+        setIsGoogleLoading(true);
+        setError('');
+        try {
+            const response = await fetch('http://localhost:3000/api/auth/google', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ credential: credentialResponse.credential })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                onLogin(data.user);
+            } else {
+                setError(data.error || 'Google prijava nije uspjela');
+            }
+        } catch (err) {
+            console.error('Google auth error:', err);
+            setError('Greška prilikom Google prijave');
+        } finally {
+            setIsGoogleLoading(false);
+        }
+    };
+
+    const handleGoogleError = () => {
+        setError('Google prijava nije uspjela. Pokušajte ponovo.');
+    };
+
     return (
         <div className={`login-page ${isAnimating ? 'animating' : ''}`}>
             <div className="login-logo-side">
@@ -44,6 +76,33 @@ const Login = ({ onLogin }) => {
                 <div className="card" style={{ maxWidth: '400px', width: '100%', margin: '20px' }}>
                     <h1 className="title">MarendApp</h1>
                     <p className="subtitle">Dobrodošli! Prijavite se za nastavak.</p>
+
+                    {/* Google Sign-In Button */}
+                    {googleClientId && (
+                        <div className="google-login-section">
+                            <div className="google-btn-wrapper">
+                                <GoogleLogin
+                                    onSuccess={handleGoogleSuccess}
+                                    onError={handleGoogleError}
+                                    theme="outline"
+                                    size="large"
+                                    width="100%"
+                                    text="signin_with"
+                                    shape="rectangular"
+                                    logo_alignment="left"
+                                />
+                            </div>
+                            {isGoogleLoading && (
+                                <p style={{ textAlign: 'center', color: 'var(--color-secondary)', fontSize: '0.9rem', marginTop: '8px' }}>
+                                    Prijava u tijeku...
+                                </p>
+                            )}
+
+                            <div className="login-divider">
+                                <span>ili</span>
+                            </div>
+                        </div>
+                    )}
 
                     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                         <div>
