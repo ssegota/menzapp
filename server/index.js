@@ -297,7 +297,11 @@ app.post('/api/auth/google', async (req, res) => {
         });
 
         const payload = ticket.getPayload();
-        const { email, name, picture, sub: googleId } = payload;
+        const { email, name, picture, sub: googleId, hd } = payload;
+
+        if (hd !== 'unipu.hr') {
+            return res.status(403).json({ error: "Google prijava je dozvoljena samo s unipu.hr računom - zatražite podatke za login od administratora." });
+        }
 
         const data = readData();
 

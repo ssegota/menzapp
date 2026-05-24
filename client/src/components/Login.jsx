@@ -9,6 +9,7 @@ const Login = ({ onLogin }) => {
     const [error, setError] = useState('');
     const [isAnimating, setIsAnimating] = useState(true);
     const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+    const [showPasswordLogin, setShowPasswordLogin] = useState(false);
 
     const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
@@ -92,6 +93,7 @@ const Login = ({ onLogin }) => {
                                     text="signin_with"
                                     shape="rectangular"
                                     logo_alignment="left"
+                                    hosted_domain="unipu.hr"
                                 />
                             </div>
                             {isGoogleLoading && (
@@ -100,38 +102,62 @@ const Login = ({ onLogin }) => {
                                 </p>
                             )}
 
-                            <div className="login-divider">
-                                <span>ili</span>
-                            </div>
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Korisničko ime</label>
-                            <input
-                                type="text"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                style={{ width: '100%' }}
-                            />
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Lozinka</label>
-                            <input
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                style={{ width: '100%' }}
-                            />
-                        </div>
+                    {error && <div style={{ color: 'var(--color-danger)', fontWeight: 'bold', textAlign: 'center', marginTop: '10px' }}>{error}</div>}
 
-                        {error && <div style={{ color: 'var(--color-danger)', fontWeight: 'bold', textAlign: 'center' }}>{error}</div>}
+                    {showPasswordLogin ? (
+                        <>
+                            {googleClientId && (
+                                <div className="login-divider">
+                                    <span>ili</span>
+                                </div>
+                            )}
+                            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Korisničko ime</label>
+                                    <input
+                                        type="text"
+                                        value={username}
+                                        onChange={(e) => setUsername(e.target.value)}
+                                        style={{ width: '100%' }}
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Lozinka</label>
+                                    <input
+                                        type="password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        style={{ width: '100%' }}
+                                    />
+                                </div>
 
-                        <button type="submit" style={{ marginTop: '10px' }}>
-                            Prijava
-                        </button>
-                    </form>
+                                <button type="submit" style={{ marginTop: '10px' }}>
+                                    Prijava
+                                </button>
+                            </form>
+                        </>
+                    ) : (
+                        <div style={{ textAlign: 'center', marginTop: '20px' }}>
+                            <button
+                                type="button"
+                                onClick={() => { setShowPasswordLogin(true); setError(''); }}
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    color: 'var(--color-secondary)',
+                                    fontSize: '0.85rem',
+                                    cursor: 'pointer',
+                                    textDecoration: 'underline',
+                                    padding: '4px 8px',
+                                }}
+                            >
+                                Prijava administratora
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

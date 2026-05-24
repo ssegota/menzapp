@@ -14,7 +14,7 @@ MarendApp is a web application for managing and ordering meals (menus) in a cant
 - `client/src/App.jsx`: The root React component. It initializes the application, handles state for the logged-in user and mocked time, and routes users to either the User Dashboard or Admin Dashboard depending on their credentials and role.
 - `client/src/components/AdminDashboard.jsx`: The dashboard panel for administrators. It provides functionality for adding, editing, and deleting menus for specific dates and meal slots (e.g., morning, afternoon). It also allows admins to manage existing orders (such as marking them as picked up or archiving non-collected ones) and editing application scheduling settings.
 - `client/src/components/UserDashboard.jsx`: The dashboard for regular users. It displays available menus for different dates and allows users to place food orders.
-- `client/src/components/Login.jsx`: A login component that authenticates users against the mock user database located in the backend.
+- `client/src/components/Login.jsx`: A login component. Primary path is **Sign in with Google**, restricted to the `unipu.hr` Workspace domain (enforced server-side via the signed `hd` claim). A hidden "Prijava administratora" link reveals the legacy username/password form for administrators and test accounts.
 - `client/src/components/TimeWidget.jsx`: A developer/testing widget rendering a clock that allows the application's perceived time to be artificially changed. This ensures time-sensitive elements can be thoroughly verified.
 - `client/src/index.css` & `client/src/App.css`: Global and application-wide CSS stylesheets.
 - `client/package.json`: Contains Vite build configurations and React dependencies.
@@ -33,6 +33,22 @@ You can easily install dependencies and run both the frontend and backend server
    make run
    ```
 The frontend will automatically run on its default port (usually `http://localhost:5173`) and the backend API will start on `http://localhost:3000`.
+
+## Authentication
+
+There are two login paths:
+
+1. **Sign in with Google** (primary, shown by default) — restricted to
+   accounts in the `unipu.hr` Google Workspace. The backend verifies the
+   `hd` claim on Google's signed ID token, so this restriction can't be
+   bypassed from the client. New users are auto-provisioned on first login.
+2. **Prijava administratora** (hidden link under the Google button) —
+   reveals the legacy username/password form. Used by the seed admin
+   account and any test users in `data.json`.
+
+Full setup for Google OAuth (Client ID, consent screen, Fly secrets, build
+args) is in [GOOGLE_OAUTH_SETUP.md](GOOGLE_OAUTH_SETUP.md). To change the
+allowed domain, see the "Domain Restriction" section there.
 
 ### Manual Setup
 
@@ -64,7 +80,7 @@ The app is packaged as a single container: the Express server serves the API
 |---|---|---|
 | `PORT` | server | Port to listen on (defaults to 3000). |
 | `DATA_DIR` | server | Directory holding `data.json`. Point at a persistent volume in prod. |
-| `GOOGLE_CLIENT_ID` | server | Google OAuth — required for `/api/auth/google`. |
+| `GOOGLE_CLIENT_ID` | server | Google OAuth — required for `/api/auth/google`. Must match `VITE_GOOGLE_CLIENT_ID`. |
 | `VITE_API_BASE_URL` | client (build-time) | Leave empty for same-origin deploys; set for split frontend/backend. |
 | `VITE_GOOGLE_CLIENT_ID` | client (build-time) | Same Google OAuth client ID, baked into the bundle. |
 

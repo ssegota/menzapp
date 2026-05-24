@@ -11,6 +11,26 @@ This guide walks you through creating a Google Cloud OAuth 2.0 Client ID and con
 5. Click **Create**
 6. Make sure the new project is selected in the dropdown
 
+## Domain Restriction (unipu.hr)
+
+Google login is hard-restricted to accounts in the `unipu.hr` Google
+Workspace. The backend verifies the `hd` (hosted domain) claim Google signs
+into every ID token — anyone signing in with a personal `@gmail.com` or any
+other Workspace domain gets a 403 with the message:
+
+> Google prijava je dozvoljena samo s unipu.hr računom - zatražite podatke za
+> login od administratora.
+
+The frontend also passes `hosted_domain="unipu.hr"` to the Google account
+picker as a UX hint, but the actual gate is the backend `hd` check in
+[server/index.js](server/index.js) — never trust the client.
+
+If you need to widen or change the allowed domain, edit both:
+- the `hd !== 'unipu.hr'` check in `app.post('/api/auth/google', …)` in
+  [server/index.js](server/index.js)
+- the `hosted_domain="unipu.hr"` prop on `<GoogleLogin>` in
+  [client/src/components/Login.jsx](client/src/components/Login.jsx)
+
 ## Step 2: Configure the OAuth Consent Screen
 
 Before creating credentials, you need to set up the consent screen that users will see when signing in.
@@ -83,12 +103,86 @@ GOOGLE_CLIENT_ID=your-client-id-here.apps.googleusercontent.com
 4. Sign in with one of the test users you added in Step 2
 5. You should be logged in and redirected to the user dashboard
 
+## Step 7: Deploying to Production (Fly.io)
+
+On Fly.io the Express server serves both the API **and** the React bundle
+from the same origin (e.g. `https://menzapp.fly.dev`). This makes the OAuth
+setup simpler than a split deploy: there's only one URL to register with
+Google, and no CORS configuration to think about.
+
+These steps assume the app is already deployed to Fly.io — see the
+"Deployment" section of [README.md](README.md) for the initial Fly setup.
+
+### 7.1 Update Google authorized origins
+
+In the Google Cloud Console (**APIs & Services → Credentials → your OAuth
+client**), add your Fly URL to both lists. The site already exists at
+`https://menzapp.fly.dev` (replace with your actual app URL if different).
+
+**Authorized JavaScript origins**
+- `http://localhost:5173` *(local dev)*
+- `https://menzapp.fly.dev`
+- `https://<your-custom-domain>` *(only if you've added one in Fly)*
+
+**Authorized redirect URIs**
+- Same URLs as above
+
+Click **Save**. Changes can take a few minutes to propagate.
+
+### 7.2 Set the backend secret on Fly.io
+
+The backend needs the Client ID to verify tokens Google returns to the
+frontend. Set it as a Fly secret (these are runtime env vars, encrypted at
+rest):
+
+```bash
+flyctl secrets set GOOGLE_CLIENT_ID=<your-client-id> --app menzapp
+```
+
+Fly automatically rolls the machines to pick up the new secret.
+
+### 7.3 Rebuild the frontend with the Client ID
+
+The frontend reads `VITE_GOOGLE_CLIENT_ID` from `import.meta.env` — Vite
+**bakes this value into the JS bundle at build time**. A Fly secret alone
+isn't enough: you have to pass it as a Docker build arg so the
+`npm run build` step inside the image picks it up.
+
+```bash
+flyctl deploy --app menzapp --build-arg VITE_GOOGLE_CLIENT_ID=<your-client-id>
+```
+
+Without `--build-arg`, the Google button stays hidden because the bundled
+client sees `VITE_GOOGLE_CLIENT_ID` as `undefined` and the conditional in
+[client/src/components/Login.jsx](client/src/components/Login.jsx)
+(`{googleClientId && (...)}`) skips rendering it.
+
+> **Tip:** to avoid retyping the Client ID, export it in your shell first:
+> ```bash
+> export GOOGLE_CLIENT_ID=<your-client-id>
+> flyctl secrets set GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID --app menzapp
+> flyctl deploy --app menzapp --build-arg VITE_GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID
+> ```
+
+### 7.4 Verify
+
+1. Open `https://menzapp.fly.dev` in a browser.
+2. The Google sign-in button should appear on the login page.
+3. Click it → Google popup → log in with a test user (from Step 2.6).
+4. In DevTools → Network, you should see
+   `POST https://menzapp.fly.dev/api/auth/google` return
+   `{success: true, user: ...}`.
+5. You should be logged in and land on the user dashboard.
+
 ## Troubleshooting
 
 | Problem | Solution |
 |---------|----------|
-| Google button doesn't appear | Check that `VITE_GOOGLE_CLIENT_ID` is set in `client/.env` and restart the dev server |
+| Google button doesn't appear in dev | Check that `VITE_GOOGLE_CLIENT_ID` is set in `client/.env` and restart the Vite dev server |
+| Google button doesn't appear in prod | You set the Fly secret but forgot `--build-arg VITE_GOOGLE_CLIENT_ID=...` on `flyctl deploy`. The frontend bundle was built without the ID. |
 | "Error 403: access_denied" | The user is not in the test users list (see Step 2.6) |
-| "Error 400: redirect_uri_mismatch" | Add `http://localhost:5173` to both Authorized JS origins AND redirect URIs |
+| "Error 400: redirect_uri_mismatch" | Add the current site URL to both Authorized JS origins AND redirect URIs in Google Console |
 | "idpiframe_initialization_failed" | Make sure third-party cookies are enabled in your browser, or try in an incognito window |
-| Login succeeds but no user in app | Check the server console for errors in the `/api/auth/google` endpoint |
+| Login succeeds but no user in app | Check `flyctl logs --app menzapp` for errors from the `/api/auth/google` endpoint |
+| `401 Nevažeći Google token` from backend | The `GOOGLE_CLIENT_ID` secret on Fly doesn't match the one used to build the frontend (or isn't set). Both must be the same Client ID. Logs will show `Wrong recipient, payload audience != requiredAudience`. |
+| `403 Google prijava je dozvoljena samo s unipu.hr računom…` | User signed in with a non-`unipu.hr` Google account. Either add them to the Workspace or use the administrator username/password login (link under the Google button). |
