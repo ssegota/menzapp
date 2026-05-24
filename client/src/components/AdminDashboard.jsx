@@ -179,7 +179,7 @@ const AdminDashboard = ({ mockTime }) => {
             ];
         });
         const csv = [header, ...rows]
-            .map(row => row.map(csvField).join(','))
+            .map(row => row.map(csvField).join(';'))
             .join('\r\n');
 
         // Prepend UTF-8 BOM so Excel renders č/š/ž correctly on Windows.

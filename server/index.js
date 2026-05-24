@@ -228,20 +228,40 @@ app.delete('/api/orders/non-collected', (req, res) => {
 });
 
 
-// DELETE order
+// Authoritative check: an order can only be cancelled while we're inside
+// its slot's working-hours window on its own date. The frontend mirrors
+// this so the button hides, but the gate lives here so a crafted DELETE
+// can't bypass it.
+const isOrderCancelable = (order, now, settings) => {
+    if (!order || !settings) return false;
+    const nowDateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    if (order.date !== nowDateStr) return false;
+    const nowHour = now.getHours();
+    if (order.slot === 'morning') {
+        return nowHour >= settings.morningStart && nowHour < settings.morningEnd;
+    }
+    if (order.slot === 'afternoon') {
+        return !!settings.afternoonEnabled && nowHour >= settings.afternoonStart && nowHour < settings.afternoonEnd;
+    }
+    return false;
+};
+
+// DELETE order — user cancellation, only inside the slot's working hours.
 app.delete('/api/orders/:id', (req, res) => {
     const { id } = req.params;
     console.log(`Attempting to delete order: ${id}`);
     const data = readData();
-    const newOrders = data.orders.filter(o => o.id !== id);
+    const order = data.orders.find(o => o.id === id);
 
-    if (newOrders.length !== data.orders.length) {
-        data.orders = newOrders;
-        writeData(data);
-        res.json({ success: true });
-    } else {
-        res.status(404).json({ error: "Narudžba nije pronađena" });
+    if (!order) {
+        return res.status(404).json({ error: "Narudžba nije pronađena" });
     }
+    if (!isOrderCancelable(order, req.currentDate, data.settings || {})) {
+        return res.status(403).json({ error: "Otkazivanje narudžbe više nije moguće — vrijeme za otkazivanje je prošlo." });
+    }
+    data.orders = data.orders.filter(o => o.id !== id);
+    writeData(data);
+    res.json({ success: true });
 });
 
 // POST pickup (Admin)

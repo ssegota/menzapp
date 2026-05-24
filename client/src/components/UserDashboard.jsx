@@ -56,6 +56,19 @@ const UserDashboard = ({ user, mockTime }) => {
     if (currentHour >= settings.morningStart && currentHour < settings.morningEnd) activeSlot = 'morning';
     if (settings.afternoonEnabled && currentHour >= settings.afternoonStart && currentHour < settings.afternoonEnd) activeSlot = 'afternoon';
 
+    // Mirrors the server check: cancellation is only allowed inside the
+    // order's slot window on the order's own date. Server enforces too.
+    const isOrderCancelable = (order) => {
+        if (!order || order.date !== currentDateStr) return false;
+        if (order.slot === 'morning') {
+            return currentHour >= settings.morningStart && currentHour < settings.morningEnd;
+        }
+        if (order.slot === 'afternoon') {
+            return !!settings.afternoonEnabled && currentHour >= settings.afternoonStart && currentHour < settings.afternoonEnd;
+        }
+        return false;
+    };
+
     const fetchMenus = async () => {
         try {
             const res = await fetch(`${API_BASE}/api/menus`);
@@ -115,7 +128,11 @@ const UserDashboard = ({ user, mockTime }) => {
 
     const handleDeleteOrder = async () => {
         try {
-            await fetch(`${API_BASE}/api/orders/${editingOrder.id}`, { method: 'DELETE' });
+            const res = await fetch(`${API_BASE}/api/orders/${editingOrder.id}`, { method: 'DELETE' });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                setMessage(data.error || 'Otkazivanje nije uspjelo.');
+            }
             setEditModalOpen(false);
             setEditingOrder(null);
             fetchOrders();
@@ -397,9 +414,17 @@ const UserDashboard = ({ user, mockTime }) => {
                             {editingOrder.code}
                         </div>
 
+                        {!isOrderCancelable(editingOrder) && (
+                            <p style={{ textAlign: 'center', color: '#888', fontSize: '0.85rem', marginTop: '15px' }}>
+                                Otkazivanje narudžbe više nije moguće — vrijeme za otkazivanje je prošlo.
+                            </p>
+                        )}
+
                         <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '20px' }}>
                             <button onClick={() => setEditModalOpen(false)} style={{ background: '#eee', color: '#333' }}>Zatvori</button>
-                            <button onClick={handleDeleteOrder} style={{ background: 'var(--color-danger)', color: 'white' }}>Obriši narudžbu</button>
+                            {isOrderCancelable(editingOrder) && (
+                                <button onClick={handleDeleteOrder} style={{ background: 'var(--color-danger)', color: 'white' }}>Obriši narudžbu</button>
+                            )}
                         </div>
                     </div>
                 </div>
