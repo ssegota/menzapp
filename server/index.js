@@ -134,10 +134,20 @@ app.post('/api/menus', (req, res) => {
     res.json({ success: true, newMenus });
 });
 
-// GET orders
+// GET orders — joined with user name/email so the admin UI and CSV export
+// can show who placed each order without a second round-trip.
 app.get('/api/orders', (req, res) => {
     const data = readData();
-    res.json(data.orders);
+    const usersById = new Map(data.users.map(u => [u.id, u]));
+    const enriched = data.orders.map(o => {
+        const u = usersById.get(o.userId);
+        return {
+            ...o,
+            userName: u ? (u.name || u.username) : null,
+            userEmail: u ? (u.email || null) : null,
+        };
+    });
+    res.json(enriched);
 });
 
 // POST order (User selection)

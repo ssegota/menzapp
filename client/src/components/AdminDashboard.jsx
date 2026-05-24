@@ -160,12 +160,15 @@ const AdminDashboard = ({ mockTime }) => {
 
     const exportNonCollected = () => {
         const nonCollected = orders.filter(o => o.status === 'non_collected');
+        const stripComma = (s) => String(s ?? '').replace(/,/g, '');
         const csvContent = "data:text/csv;charset=utf-8,"
-            + "ID,Korisnik,Jelo,Datum,Termin,Kod\n"
+            + "ID,Ime,Email,Jelo,Datum,Termin,Kod\n"
             + nonCollected.map(o => {
                 const menu = menus.find(m => m.id === o.menuId);
-                const menuText = (menu ? menu.text : o.menuText || 'Unknown').replace(/,/g, '');
-                return `${o.id},${o.userId},${menuText},${formatDateEU(o.date)},${o.slot},${o.code}`;
+                const menuText = stripComma(menu ? menu.text : o.menuText || 'Unknown');
+                const name = stripComma(o.userName || `#${o.userId}`);
+                const email = stripComma(o.userEmail);
+                return `${o.id},${name},${email},${menuText},${formatDateEU(o.date)},${o.slot},${o.code}`;
             }).join("\n");
 
         const encodedUri = encodeURI(csvContent);
@@ -376,7 +379,10 @@ const AdminDashboard = ({ mockTime }) => {
                                             boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
                                         }}
                                     >
-                                        <h4 style={{ margin: '0 0 5px 0' }}>#{order.userId}</h4>
+                                        <h4 style={{ margin: '0 0 2px 0' }}>{order.userName || `#${order.userId}`}</h4>
+                                        {order.userEmail && (
+                                            <div style={{ fontSize: '0.75rem', color: '#888', marginBottom: '5px' }}>{order.userEmail}</div>
+                                        )}
                                         <div style={{ fontSize: '0.9rem' }}>
                                             {menu ? <ReactMarkdown>{menu.text}</ReactMarkdown> : <ReactMarkdown>{order.menuText || 'Nepoznato jelo (obrisano)'}</ReactMarkdown>}
                                         </div>
@@ -410,7 +416,8 @@ const AdminDashboard = ({ mockTime }) => {
                             <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px', minWidth: '500px' }}>
                                 <thead>
                                     <tr style={{ background: '#f5f5f5', textAlign: 'left' }}>
-                                        <th style={{ padding: '10px' }}>Korisnik</th>
+                                        <th style={{ padding: '10px' }}>Ime</th>
+                                        <th style={{ padding: '10px' }}>Email</th>
                                         <th style={{ padding: '10px' }}>Jelo</th>
                                         <th style={{ padding: '10px' }}>Datum</th>
                                         <th style={{ padding: '10px' }}>Kod</th>
@@ -421,7 +428,8 @@ const AdminDashboard = ({ mockTime }) => {
                                         const menu = menus.find(m => m.id === order.menuId);
                                         return (
                                             <tr key={order.id} style={{ borderBottom: '1px solid #eee' }}>
-                                                <td style={{ padding: '10px' }}>{order.userId}</td>
+                                                <td style={{ padding: '10px' }}>{order.userName || `#${order.userId}`}</td>
+                                                <td style={{ padding: '10px', color: '#666' }}>{order.userEmail || ''}</td>
                                                 <td style={{ padding: '10px' }}>{menu ? <ReactMarkdown>{menu.text}</ReactMarkdown> : <ReactMarkdown>{order.menuText || 'Nepoznato jelo (obrisano)'}</ReactMarkdown>}</td>
                                                 <td style={{ padding: '10px', whiteSpace: 'nowrap' }}>{formatDateEU(order.date)} ({order.slot})</td>
                                                 <td style={{ padding: '10px', fontWeight: 'bold' }}>{order.code}</td>
