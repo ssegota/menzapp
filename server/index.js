@@ -7,8 +7,10 @@ const { OAuth2Client } = require('google-auth-library');
 const path = require('path');
 
 const app = express();
-const PORT = 3000;
-const DATA_FILE = path.join(__dirname, 'data.json');
+const PORT = process.env.PORT || 3000;
+const DATA_DIR = process.env.DATA_DIR || __dirname;
+const DATA_FILE = path.join(DATA_DIR, 'data.json');
+const SEED_FILE = path.join(__dirname, 'data.json');
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
 const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
 
@@ -19,8 +21,14 @@ app.use(bodyParser.json());
 const readData = () => {
     try {
         if (!fs.existsSync(DATA_FILE)) {
-            // Initialize if not exists
-            const initialData = { users: [], menus: [], orders: [] };
+            // Seed from bundled data.json (for first boot on a fresh persistent volume),
+            // otherwise initialize empty.
+            let initialData = { users: [], menus: [], orders: [] };
+            if (SEED_FILE !== DATA_FILE && fs.existsSync(SEED_FILE)) {
+                initialData = JSON.parse(fs.readFileSync(SEED_FILE, 'utf8'));
+                console.log(`Seeded ${DATA_FILE} from ${SEED_FILE}`);
+            }
+            fs.mkdirSync(DATA_DIR, { recursive: true });
             fs.writeFileSync(DATA_FILE, JSON.stringify(initialData, null, 2));
             return initialData;
         }
@@ -346,6 +354,6 @@ app.get(/(.*)/, (req, res) => {
     res.sendFile(path.join(__dirname, '../client/dist/index.html'));
 });
 
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT}`);
 });

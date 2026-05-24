@@ -3,6 +3,8 @@ import ReactMarkdown from 'react-markdown';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+
 const AdminDashboard = ({ mockTime }) => {
     const [activeTab, setActiveTab] = useState('menu'); // menu, orders, non-collected, settings
     const [menus, setMenus] = useState([]);
@@ -39,7 +41,7 @@ const AdminDashboard = ({ mockTime }) => {
 
     const fetchMenus = async () => {
         try {
-            const res = await fetch('http://localhost:3000/api/menus');
+            const res = await fetch(`${API_BASE}/api/menus`);
             const data = await res.json();
             setMenus(data);
         } catch (err) { }
@@ -47,7 +49,7 @@ const AdminDashboard = ({ mockTime }) => {
 
     const fetchOrders = async () => {
         try {
-            const res = await fetch('http://localhost:3000/api/orders');
+            const res = await fetch(`${API_BASE}/api/orders`);
             const data = await res.json();
             setOrders(data);
         } catch (err) { }
@@ -55,7 +57,7 @@ const AdminDashboard = ({ mockTime }) => {
 
     const fetchSettings = async () => {
         try {
-            const res = await fetch('http://localhost:3000/api/settings');
+            const res = await fetch(`${API_BASE}/api/settings`);
             const data = await res.json();
             setSettings(data);
         } catch (err) { }
@@ -74,7 +76,7 @@ const AdminDashboard = ({ mockTime }) => {
 
         setLoading(true);
         try {
-            const res = await fetch('http://localhost:3000/api/menus', {
+            const res = await fetch(`${API_BASE}/api/menus`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -100,7 +102,7 @@ const AdminDashboard = ({ mockTime }) => {
     const handleUpdateMenu = async () => {
         if (!editingMenu) return;
         try {
-            const res = await fetch(`http://localhost:3000/api/menus/${editingMenu.id}`, {
+            const res = await fetch(`${API_BASE}/api/menus/${editingMenu.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: editMenuText })
@@ -116,7 +118,7 @@ const AdminDashboard = ({ mockTime }) => {
         if (!editingMenu) return;
         if (!window.confirm("Sigurno obrisati ovo jelo?")) return;
         try {
-            const res = await fetch(`http://localhost:3000/api/menus/${editingMenu.id}`, { method: 'DELETE' });
+            const res = await fetch(`${API_BASE}/api/menus/${editingMenu.id}`, { method: 'DELETE' });
             if (res.ok) {
                 setMessage('Meni obrisan.');
                 setEditingMenu(null);
@@ -135,7 +137,7 @@ const AdminDashboard = ({ mockTime }) => {
     const handleMoveToNonCollected = async () => {
         if (!window.confirm("Prebaciti sve narudžbe na čekanju u 'Nepreuzeto'?")) return;
         try {
-            const res = await fetch('http://localhost:3000/api/orders/non-collected', { method: 'POST' });
+            const res = await fetch(`${API_BASE}/api/orders/non-collected`, { method: 'POST' });
             const data = await res.json();
             if (data.success) {
                 alert(`Prebačeno ${data.count} narudžbi.`);
@@ -147,7 +149,7 @@ const AdminDashboard = ({ mockTime }) => {
     const handleDeleteAllNonCollected = async () => {
         if (!window.confirm("Sigurno obrisati SVE nepreuzete narudžbe?")) return;
         try {
-            const res = await fetch('http://localhost:3000/api/orders/non-collected', { method: 'DELETE' });
+            const res = await fetch(`${API_BASE}/api/orders/non-collected`, { method: 'DELETE' });
             const data = await res.json();
             if (data.success) {
                 alert(`Obrisano ${data.count} narudžbi.`);
@@ -177,7 +179,7 @@ const AdminDashboard = ({ mockTime }) => {
     // Settings Handlers
     const handleSaveSettings = async () => {
         try {
-            const res = await fetch('http://localhost:3000/api/settings', {
+            const res = await fetch(`${API_BASE}/api/settings`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(settings)
@@ -191,7 +193,7 @@ const AdminDashboard = ({ mockTime }) => {
 
     const confirmPickup = async () => {
         try {
-            const res = await fetch(`http://localhost:3000/api/orders/${selectedOrder.id}/pickup`, { method: 'POST' });
+            const res = await fetch(`${API_BASE}/api/orders/${selectedOrder.id}/pickup`, { method: 'POST' });
             if (res.ok) { fetchOrders(); setPickupModalOpen(false); setSelectedOrder(null); }
         } catch (err) { console.error(err); }
     };

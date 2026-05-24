@@ -1,0 +1,29 @@
+# Render.com Blueprint.
+# Deploy by pushing this branch and clicking "New > Blueprint" in the Render dashboard,
+# pointing at this repo. Render reads this file automatically.
+#
+# Persistent disks are NOT available on the free plan — bump to Starter ($7/mo)
+# to keep the disk block below. Without a disk, data.json will reset on every redeploy.
+
+services:
+  - type: web
+    name: marendapp
+    runtime: docker
+    plan: starter
+    region: frankfurt
+    healthCheckPath: /
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: DATA_DIR
+        value: /data
+      - key: NODE_ENV
+        value: production
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: VITE_GOOGLE_CLIENT_ID
+        sync: false
+    disk:
+      name: marendapp-data
+      mountPath: /data
+      sizeGB: 1

@@ -51,3 +51,47 @@ If you prefer to run the components separately:
    npm install
    npm run dev
    ```
+
+## Deployment (Fly.io / Render)
+
+The app is packaged as a single container: the Express server serves the API
+*and* the built React bundle from `client/dist`. Configuration lives in
+`Dockerfile`, `fly.toml`, and `render.yaml` at the repo root.
+
+### Environment variables
+
+| Variable | Where | Purpose |
+|---|---|---|
+| `PORT` | server | Port to listen on (defaults to 3000). |
+| `DATA_DIR` | server | Directory holding `data.json`. Point at a persistent volume in prod. |
+| `GOOGLE_CLIENT_ID` | server | Google OAuth — required for `/api/auth/google`. |
+| `VITE_API_BASE_URL` | client (build-time) | Leave empty for same-origin deploys; set for split frontend/backend. |
+| `VITE_GOOGLE_CLIENT_ID` | client (build-time) | Same Google OAuth client ID, baked into the bundle. |
+
+### Fly.io
+
+```bash
+fly launch --no-deploy                      # if app doesn't yet exist
+fly volumes create marendapp_data --region fra --size 1
+fly secrets set GOOGLE_CLIENT_ID=... VITE_GOOGLE_CLIENT_ID=...
+fly deploy
+```
+
+Note: `VITE_*` vars are baked into the JS bundle at build time. To pass them
+into the Docker build, run:
+```bash
+fly deploy --build-arg VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
+```
+
+### Render.com
+
+Push this branch, then in the Render dashboard pick **New → Blueprint** and
+select this repo. Render reads `render.yaml`. After the first deploy, set
+`GOOGLE_CLIENT_ID` and `VITE_GOOGLE_CLIENT_ID` in the service's Environment
+tab (they're marked `sync: false` so Render prompts for them).
+
+### Persistent data
+
+`data.json` lives in `DATA_DIR`. On first boot, if no `data.json` exists at
+that path, the server seeds it from the copy bundled in the image (so the
+default admin user exists). Subsequent restarts read/write the volume copy.

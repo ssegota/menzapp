@@ -1,0 +1,32 @@
+# Fly.io deployment config.
+# After editing `app` to your chosen name, deploy with:
+#   fly launch --no-deploy            # creates the app (skip if you already ran `fly apps create`)
+#   fly volumes create marendapp_data --region fra --size 1
+#   fly secrets set GOOGLE_CLIENT_ID=... VITE_GOOGLE_CLIENT_ID=...
+#   fly deploy
+
+app = "marendapp"
+primary_region = "fra"
+
+[build]
+
+[env]
+  PORT = "3000"
+  DATA_DIR = "/data"
+  NODE_ENV = "production"
+
+[[mounts]]
+  source = "marendapp_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 256

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+
 const UserDashboard = ({ user, mockTime }) => {
     const [menus, setMenus] = useState([]);
     const [orders, setOrders] = useState([]);
@@ -44,7 +46,7 @@ const UserDashboard = ({ user, mockTime }) => {
 
     const fetchSettings = async () => {
         try {
-            const res = await fetch('http://localhost:3000/api/settings');
+            const res = await fetch(`${API_BASE}/api/settings`);
             const data = await res.json();
             setSettings(data);
         } catch (err) { }
@@ -56,7 +58,7 @@ const UserDashboard = ({ user, mockTime }) => {
 
     const fetchMenus = async () => {
         try {
-            const res = await fetch('http://localhost:3000/api/menus');
+            const res = await fetch(`${API_BASE}/api/menus`);
             const data = await res.json();
             setMenus(data);
         } catch (err) {
@@ -66,7 +68,7 @@ const UserDashboard = ({ user, mockTime }) => {
 
     const fetchOrders = async () => {
         try {
-            const res = await fetch('http://localhost:3000/api/orders');
+            const res = await fetch(`${API_BASE}/api/orders`);
             const data = await res.json();
             setOrders(data);
         } catch (err) {
@@ -83,7 +85,7 @@ const UserDashboard = ({ user, mockTime }) => {
     const confirmOrder = async () => {
         setLoading(true);
         try {
-            const res = await fetch('http://localhost:3000/api/orders', {
+            const res = await fetch(`${API_BASE}/api/orders`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -113,7 +115,7 @@ const UserDashboard = ({ user, mockTime }) => {
 
     const handleDeleteOrder = async () => {
         try {
-            await fetch(`http://localhost:3000/api/orders/${editingOrder.id}`, { method: 'DELETE' });
+            await fetch(`${API_BASE}/api/orders/${editingOrder.id}`, { method: 'DELETE' });
             setEditModalOpen(false);
             setEditingOrder(null);
             fetchOrders();
