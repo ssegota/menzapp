@@ -1,32 +1,30 @@
-# Fly.io deployment config.
-# After editing `app` to your chosen name, deploy with:
-#   fly launch --no-deploy            # creates the app (skip if you already ran `fly apps create`)
-#   fly volumes create marendapp_data --region fra --size 1
-#   fly secrets set GOOGLE_CLIENT_ID=... VITE_GOOGLE_CLIENT_ID=...
-#   fly deploy
+# fly.toml app configuration file generated for menzapp on 2026-05-24T11:36:25Z
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
 
-app = "marendapp"
-primary_region = "fra"
+app = 'menzapp'
+primary_region = 'ams'
 
 [build]
 
 [env]
-  PORT = "3000"
-  DATA_DIR = "/data"
-  NODE_ENV = "production"
+  DATA_DIR = '/data'
+  NODE_ENV = 'production'
+  PORT = '3000'
 
 [[mounts]]
-  source = "marendapp_data"
-  destination = "/data"
+  source = 'marendapp_data'
+  destination = '/data'
 
 [http_service]
-  internal_port = 3000
+  internal_port = 8080
   force_https = true
-  auto_stop_machines = "stop"
+  auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 0
 
 [[vm]]
-  cpu_kind = "shared"
+  cpu_kind = 'shared'
   cpus = 1
   memory_mb = 256
