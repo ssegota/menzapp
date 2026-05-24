@@ -160,23 +160,38 @@ const AdminDashboard = ({ mockTime }) => {
 
     const exportNonCollected = () => {
         const nonCollected = orders.filter(o => o.status === 'non_collected');
-        const stripComma = (s) => String(s ?? '').replace(/,/g, '');
-        const csvContent = "data:text/csv;charset=utf-8,"
-            + "ID,Ime,Email,Jelo,Datum,Termin,Kod\n"
-            + nonCollected.map(o => {
-                const menu = menus.find(m => m.id === o.menuId);
-                const menuText = stripComma(menu ? menu.text : o.menuText || 'Unknown');
-                const name = stripComma(o.userName || `#${o.userId}`);
-                const email = stripComma(o.userEmail);
-                return `${o.id},${name},${email},${menuText},${formatDateEU(o.date)},${o.slot},${o.code}`;
-            }).join("\n");
+        // RFC 4180: wrap each field in quotes, double-up any embedded quotes.
+        // Handles commas, newlines (from multi-line markdown menus), and
+        // quotes inside fields without corrupting subsequent columns.
+        const csvField = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+        const header = ['ID', 'Ime', 'Email', 'Jelo', 'Datum', 'Termin', 'Kod'];
+        const rows = nonCollected.map(o => {
+            const menu = menus.find(m => m.id === o.menuId);
+            const menuText = menu ? menu.text : (o.menuText || 'Unknown');
+            return [
+                o.id,
+                o.userName || `#${o.userId}`,
+                o.userEmail || '',
+                menuText,
+                formatDateEU(o.date),
+                o.slot,
+                o.code,
+            ];
+        });
+        const csv = [header, ...rows]
+            .map(row => row.map(csvField).join(','))
+            .join('\r\n');
 
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "nepreuzeto.csv");
+        // Prepend UTF-8 BOM so Excel renders č/š/ž correctly on Windows.
+        const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'nepreuzeto.csv');
         document.body.appendChild(link);
         link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
     };
 
     // Settings Handlers
