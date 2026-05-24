@@ -43,8 +43,11 @@ There are two login paths:
    `hd` claim on Google's signed ID token, so this restriction can't be
    bypassed from the client. New users are auto-provisioned on first login.
 2. **Prijava administratora** (hidden link under the Google button) —
-   reveals the legacy username/password form. Used by the seed admin
-   account and any test users in `data.json`.
+   reveals the username/password form for the admin account (username
+   `admin`). Passwords are hashed with scrypt + random per-user salt and
+   stored on the persistent volume; nothing is kept in plaintext on disk
+   or in source. The plaintext admin password is seeded from the
+   `ADMIN_PASSWORD` env var on first boot (see env table below).
 
 Full setup for Google OAuth (Client ID, consent screen, Fly secrets, build
 args) is in [GOOGLE_OAUTH_SETUP.md](GOOGLE_OAUTH_SETUP.md). To change the
@@ -81,6 +84,7 @@ The app is packaged as a single container: the Express server serves the API
 | `PORT` | server | Port to listen on (defaults to 3000). |
 | `DATA_DIR` | server | Directory holding `data.json`. Point at a persistent volume in prod. |
 | `GOOGLE_CLIENT_ID` | server | Google OAuth — required for `/api/auth/google`. Must match `VITE_GOOGLE_CLIENT_ID`. |
+| `ADMIN_PASSWORD` | server | One-shot seed for the admin password. On boot, if the admin user has no `passwordHash`, the server hashes this with scrypt (random per-user salt) and persists it to `data.json`. Can be removed after the first boot — the hash lives on the persistent volume. |
 | `VITE_API_BASE_URL` | client (build-time) | Leave empty for same-origin deploys; set for split frontend/backend. |
 | `VITE_GOOGLE_CLIENT_ID` | client (build-time) | Same Google OAuth client ID, baked into the bundle. |
 

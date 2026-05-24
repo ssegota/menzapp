@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const fs = require('fs');
+const crypto = require('crypto');
 const { OAuth2Client } = require('google-auth-library');
 const path = require('path');
 
@@ -49,6 +50,40 @@ const writeData = (data) => {
         fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
     } catch (err) {
         console.error("Error writing data:", err);
+    }
+};
+
+// Password hashing: scrypt with a per-user random salt. Stored as
+// "scrypt$<salt-hex>$<hash-hex>" so future algorithm swaps stay forward-
+// compatible. The plaintext password never touches disk or logs.
+const SCRYPT_KEYLEN = 64;
+const hashPassword = (password) => {
+    const salt = crypto.randomBytes(16).toString('hex');
+    const hash = crypto.scryptSync(password, salt, SCRYPT_KEYLEN).toString('hex');
+    return `scrypt$${salt}$${hash}`;
+};
+const verifyPassword = (password, stored) => {
+    if (!stored || typeof stored !== 'string') return false;
+    const parts = stored.split('$');
+    if (parts.length !== 3 || parts[0] !== 'scrypt') return false;
+    const [, salt, expectedHex] = parts;
+    const expected = Buffer.from(expectedHex, 'hex');
+    const actual = crypto.scryptSync(password, salt, expected.length);
+    return expected.length === actual.length && crypto.timingSafeEqual(actual, expected);
+};
+
+// On boot: if the admin user has no passwordHash yet and ADMIN_PASSWORD is
+// set, hash it and persist. After this runs once on the production volume,
+// the env var can be removed — the hash lives in data.json on the volume.
+const seedAdminPassword = () => {
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    if (!adminPassword) return;
+    const data = readData();
+    const admin = data.users.find(u => u.username === 'admin');
+    if (admin && !admin.passwordHash) {
+        admin.passwordHash = hashPassword(adminPassword);
+        writeData(data);
+        console.log('Seeded admin passwordHash from ADMIN_PASSWORD env.');
     }
 };
 
@@ -337,16 +372,19 @@ app.post('/api/auth/google', async (req, res) => {
     }
 });
 
-// Login (Dynamic)
+// Login (username/password — admin only; regular users go through Google).
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
-    const data = readData();
+    if (!username || !password) {
+        return res.status(401).json({ error: "Krivi podaci za prijavu" });
+    }
 
+    const data = readData();
     const user = data.users.find(u => u.username === username);
 
-    if (user) {
-        // Password check ignored as per instructions "password" for all
-        res.json({ success: true, user });
+    if (user && user.passwordHash && verifyPassword(password, user.passwordHash)) {
+        const { passwordHash, ...safeUser } = user;
+        res.json({ success: true, user: safeUser });
     } else {
         res.status(401).json({ error: "Krivi podaci za prijavu" });
     }
@@ -357,6 +395,8 @@ app.post('/api/login', (req, res) => {
 app.get(/(.*)/, (req, res) => {
     res.sendFile(path.join(__dirname, '../client/dist/index.html'));
 });
+
+seedAdminPassword();
 
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
