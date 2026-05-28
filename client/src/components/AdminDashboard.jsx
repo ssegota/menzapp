@@ -321,6 +321,12 @@ const AdminDashboard = ({ mockTime }) => {
     // Filter logic
     const pendingOrders = orders.filter(o => o.status === 'pending');
     const nonCollectedOrders = orders.filter(o => o.status === 'non_collected');
+    // "Prebaci u Nepreuzeto" only affects pending orders whose meal date
+    // is today-or-earlier — pre-orders for the next workday must stay
+    // pending until their own day passes. We surface this count on the
+    // button so admins see when there's nothing to move.
+    const todayStr = `${mockTime.getFullYear()}-${String(mockTime.getMonth() + 1).padStart(2, '0')}-${String(mockTime.getDate()).padStart(2, '0')}`;
+    const moveableToNonCollectedCount = pendingOrders.filter(o => o.date <= todayStr).length;
     const getFilteredPending = () => {
         let filtered = pendingOrders;
         if (orderSlotFilter !== 'all') {
@@ -468,9 +474,13 @@ const AdminDashboard = ({ mockTime }) => {
                         />
                         <button
                             onClick={handleMoveToNonCollected}
-                            style={{ background: 'var(--color-danger)', color: 'white', width: '100%', maxWidth: '300px' }}
+                            disabled={moveableToNonCollectedCount === 0}
+                            title={moveableToNonCollectedCount === 0
+                                ? `Nema narudžbi za prebaciti. Akcija djeluje samo na narudžbe s datumom ≤ danas (${todayStr}); pre-narudžbe za idući radni dan su zaštićene.`
+                                : `Prebacuje narudžbe s datumom ≤ ${todayStr} u nepreuzete.`}
+                            style={{ background: moveableToNonCollectedCount === 0 ? '#bbb' : 'var(--color-danger)', color: 'white', width: '100%', maxWidth: '300px', cursor: moveableToNonCollectedCount === 0 ? 'not-allowed' : 'pointer' }}
                         >
-                            Prebaci u Nepreuzeto
+                            Prebaci u Nepreuzeto ({moveableToNonCollectedCount})
                         </button>
                     </div>
 
