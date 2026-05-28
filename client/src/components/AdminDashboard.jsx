@@ -305,6 +305,22 @@ const AdminDashboard = ({ mockTime }) => {
         } catch (err) { console.error(err); }
     };
 
+    // Dev settings save: same POST, but reloads the page so TimeWidget
+    // (which reads settings only on mount) actually picks up the toggle.
+    const handleSaveDevSettings = async () => {
+        try {
+            const res = await apiFetch(`${API_BASE}/api/settings`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(settings)
+            });
+            if (res.ok) {
+                alert('Dev postavke spremljene. Stranica će se ponovno učitati.');
+                window.location.reload();
+            }
+        } catch (err) { console.error(err); }
+    };
+
     // Helpers
     const openPickupModal = (order) => { setSelectedOrder(order); setPickupModalOpen(true); };
 
@@ -770,7 +786,7 @@ const AdminDashboard = ({ mockTime }) => {
                                     <div style={{ display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
                                         <button
                                             type="button"
-                                            onClick={handleSaveSettings}
+                                            onClick={handleSaveDevSettings}
                                             style={{ background: 'var(--color-success)', color: 'white', fontSize: '0.9rem', padding: '8px 16px' }}
                                         >
                                             Spremi Dev postavke
