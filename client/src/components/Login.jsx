@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+import { apiFetch, API_BASE } from '../api';
 
 const Login = ({ onLogin }) => {
     const [username, setUsername] = useState('');
@@ -23,7 +22,7 @@ const Login = ({ onLogin }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch(`${API_BASE}/api/login`, {
+            const response = await apiFetch(`${API_BASE}/api/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
@@ -45,7 +44,7 @@ const Login = ({ onLogin }) => {
         setIsGoogleLoading(true);
         setError('');
         try {
-            const response = await fetch(`${API_BASE}/api/auth/google`, {
+            const response = await apiFetch(`${API_BASE}/api/auth/google`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ credential: credentialResponse.credential })

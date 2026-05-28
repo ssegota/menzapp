@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+import { apiFetch, API_BASE } from '../api';
 
 const UserDashboard = ({ user, mockTime }) => {
     const [menus, setMenus] = useState([]);
@@ -63,7 +62,7 @@ const UserDashboard = ({ user, mockTime }) => {
 
     const fetchSettings = async () => {
         try {
-            const res = await fetch(`${API_BASE}/api/settings`);
+            const res = await apiFetch(`${API_BASE}/api/settings`);
             const data = await res.json();
             setSettings(data);
         } catch (err) { }
@@ -94,7 +93,7 @@ const UserDashboard = ({ user, mockTime }) => {
 
     const fetchMenus = async () => {
         try {
-            const res = await fetch(`${API_BASE}/api/menus`);
+            const res = await apiFetch(`${API_BASE}/api/menus`);
             const data = await res.json();
             setMenus(data);
         } catch (err) {
@@ -104,7 +103,7 @@ const UserDashboard = ({ user, mockTime }) => {
 
     const fetchOrders = async () => {
         try {
-            const res = await fetch(`${API_BASE}/api/orders`);
+            const res = await apiFetch(`${API_BASE}/api/orders`);
             const data = await res.json();
             setOrders(data);
         } catch (err) {
@@ -129,7 +128,7 @@ const UserDashboard = ({ user, mockTime }) => {
         setLoading(true);
         setConfirmError('');
         try {
-            const res = await fetch(`${API_BASE}/api/orders`, {
+            const res = await apiFetch(`${API_BASE}/api/orders`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -162,7 +161,7 @@ const UserDashboard = ({ user, mockTime }) => {
 
     const handleDeleteOrder = async () => {
         try {
-            const res = await fetch(`${API_BASE}/api/orders/${editingOrder.id}`, { method: 'DELETE' });
+            const res = await apiFetch(`${API_BASE}/api/orders/${editingOrder.id}`, { method: 'DELETE' });
             const data = await res.json().catch(() => ({}));
             if (!res.ok) {
                 setMessage(data.error || 'Otkazivanje nije uspjelo.');
@@ -205,6 +204,39 @@ const UserDashboard = ({ user, mockTime }) => {
         transition: 'all 0.2s ease-in-out'
     });
 
+    // Banned users see *only* the block screen — no tabs, no history, no
+    // menu. The intent is that nothing in the user dashboard is reachable
+    // until an admin releases them. Logout is still available because it
+    // lives in App.jsx, outside this component.
+    if (isUserBanned) {
+        return (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '700px', margin: '40px auto', padding: '0 16px' }}>
+                <div className="card" style={{
+                    padding: '40px 30px',
+                    background: '#ffebee',
+                    border: '3px solid #c62828',
+                    textAlign: 'center',
+                    width: '100%'
+                }}>
+                    <div style={{ fontSize: '3rem', marginBottom: '12px' }}>⛔</div>
+                    <h2 style={{ margin: '0 0 12px 0', color: '#c62828', fontSize: '1.7rem' }}>
+                        Naručivanje je blokirano
+                    </h2>
+                    <p style={{ margin: '0 0 14px 0', fontSize: '1.05rem', color: '#7f1d1d' }}>
+                        Na Vašem računu je evidentirano <strong>{myUnpickedCount}</strong> nepreuzete narudžbe.
+                        Pravilima menze, naručivanje se automatski blokira kad broj nepreuzetih dosegne <strong>{NON_COLLECTED_BAN_THRESHOLD}</strong>.
+                    </p>
+                    <p style={{ margin: '0 0 6px 0', fontSize: '0.95rem', color: '#555' }}>
+                        Sav daljnji pristup naručivanju, aktivnim narudžbama i povijesti zaključan je do ručnog otključavanja.
+                    </p>
+                    <p style={{ margin: 0, fontSize: '0.95rem', color: '#555' }}>
+                        Za odblokiranje obratite se administratoru menze.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '800px', margin: '0 auto' }}>
             <div style={{ display: 'flex', gap: '15px', marginBottom: '25px', width: '100%', justifyContent: 'center' }}>
@@ -225,27 +257,7 @@ const UserDashboard = ({ user, mockTime }) => {
                     <div className="card" style={{ padding: '30px' }}>
                         <h2 className="title" style={{ fontSize: '1.8rem' }}>Naručivanje obroka</h2>
 
-                        {isUserBanned ? (
-                            <div style={{
-                                padding: '20px',
-                                borderRadius: '8px',
-                                background: '#ffebee',
-                                color: '#c62828',
-                                textAlign: 'center',
-                                border: '2px solid #c62828'
-                            }}>
-                                <p style={{ margin: '0 0 8px 0', fontSize: '1.15rem', fontWeight: '700' }}>
-                                    Naručivanje je blokirano.
-                                </p>
-                                <p style={{ margin: '0 0 6px 0', fontSize: '0.95rem' }}>
-                                    Evidentirano je <strong>{myUnpickedCount}</strong> nepreuzete narudžbe.
-                                    Kad broj nepreuzetih dosegne <strong>{NON_COLLECTED_BAN_THRESHOLD}</strong>, naručivanje se automatski blokira.
-                                </p>
-                                <p style={{ margin: 0, fontSize: '0.9rem', color: '#7f1d1d' }}>
-                                    Za odblokiranje obratite se administratoru menze.
-                                </p>
-                            </div>
-                        ) : !isOrderingActive ? (
+                        {!isOrderingActive ? (
                             <div style={{
                                 padding: '20px',
                                 borderRadius: '8px',

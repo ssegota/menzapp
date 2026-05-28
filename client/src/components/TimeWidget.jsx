@@ -1,10 +1,37 @@
 import React, { useState, useEffect } from 'react';
+import { apiFetch, API_BASE } from '../api';
 
 const TimeWidget = ({ onTimeChange }) => {
     const [date, setDate] = useState('');
     const [time, setTime] = useState('');
+    // `null` = haven't asked the server yet; render nothing until we know.
+    // Prevents the widget from flashing in then disappearing once settings
+    // arrive.
+    const [enabled, setEnabled] = useState(null);
 
     useEffect(() => {
+        (async () => {
+            try {
+                const res = await apiFetch(`${API_BASE}/api/settings`);
+                const data = await res.json();
+                const on = data && data.timeTravelEnabled !== false;
+                setEnabled(on);
+                if (!on) {
+                    // Widget disabled in prod — drop any leftover mocked time
+                    // so apiFetch stops sending x-mock-time on subsequent calls.
+                    localStorage.removeItem('mockTime');
+                    onTimeChange(new Date());
+                }
+            } catch (err) {
+                // If settings can't be fetched, default to showing the widget
+                // so devs aren't locked out by a backend hiccup.
+                setEnabled(true);
+            }
+        })();
+    }, []);
+
+    useEffect(() => {
+        if (!enabled) return;
         // Initial load from local storage or current time
         const stored = localStorage.getItem('mockTime');
         if (stored) {
@@ -18,7 +45,7 @@ const TimeWidget = ({ onTimeChange }) => {
             setTime(now.toTimeString().split(' ')[0].substring(0, 5));
             onTimeChange(now);
         }
-    }, []);
+    }, [enabled]);
 
     const handleUpdate = (newDate, newTime) => {
         if (newDate && newTime) {
@@ -27,6 +54,8 @@ const TimeWidget = ({ onTimeChange }) => {
             onTimeChange(d);
         }
     };
+
+    if (!enabled) return null;
 
     return (
         <div style={{

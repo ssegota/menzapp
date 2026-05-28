@@ -357,12 +357,14 @@ app.get('/api/settings', (req, res) => {
         orderingEnd: 24,
         afternoonEnabled: true,
         morningDeliveryTime: "10:30",
-        afternoonDeliveryTime: "16:30"
+        afternoonDeliveryTime: "16:30",
+        timeTravelEnabled: true
     };
     if (typeof settings.orderingStart !== 'number') settings.orderingStart = 8;
     if (typeof settings.orderingEnd !== 'number') settings.orderingEnd = 24;
     if (!settings.morningDeliveryTime) settings.morningDeliveryTime = "10:30";
     if (!settings.afternoonDeliveryTime) settings.afternoonDeliveryTime = "16:30";
+    if (typeof settings.timeTravelEnabled !== 'boolean') settings.timeTravelEnabled = true;
     res.json(settings);
 });
 

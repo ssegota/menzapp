@@ -2,8 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+import { apiFetch, API_BASE } from '../api';
 
 // Tiny Markdown toolbar — wraps the current selection (bold/italic) or
 // prepends a line-prefix (heading, list). Stays inside what ReactMarkdown
@@ -89,6 +88,15 @@ const AdminDashboard = ({ mockTime }) => {
     const [pickupModalOpen, setPickupModalOpen] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
 
+    // Developer settings — gated by a hardcoded password so a normal admin
+    // doesn't accidentally toggle internal flags. NOT real security; the
+    // backend setting can still be changed by anyone who knows the API.
+    // The gate exists to keep the controls out of casual reach.
+    const DEV_PASSWORD = 'menza-dev-1';
+    const [devUnlocked, setDevUnlocked] = useState(false);
+    const [devPasswordInput, setDevPasswordInput] = useState('');
+    const [devPasswordError, setDevPasswordError] = useState('');
+
     useEffect(() => {
         fetchMenus();
         fetchOrders();
@@ -99,7 +107,7 @@ const AdminDashboard = ({ mockTime }) => {
 
     const fetchMenus = async () => {
         try {
-            const res = await fetch(`${API_BASE}/api/menus`);
+            const res = await apiFetch(`${API_BASE}/api/menus`);
             const data = await res.json();
             setMenus(data);
         } catch (err) { }
@@ -107,7 +115,7 @@ const AdminDashboard = ({ mockTime }) => {
 
     const fetchOrders = async () => {
         try {
-            const res = await fetch(`${API_BASE}/api/orders`);
+            const res = await apiFetch(`${API_BASE}/api/orders`);
             const data = await res.json();
             setOrders(data);
         } catch (err) { }
@@ -115,7 +123,7 @@ const AdminDashboard = ({ mockTime }) => {
 
     const fetchSettings = async () => {
         try {
-            const res = await fetch(`${API_BASE}/api/settings`);
+            const res = await apiFetch(`${API_BASE}/api/settings`);
             const data = await res.json();
             setSettings(data);
         } catch (err) { }
@@ -123,7 +131,7 @@ const AdminDashboard = ({ mockTime }) => {
 
     const fetchUsers = async () => {
         try {
-            const res = await fetch(`${API_BASE}/api/users`);
+            const res = await apiFetch(`${API_BASE}/api/users`);
             const data = await res.json();
             setUsers(data);
         } catch (err) { }
@@ -133,7 +141,7 @@ const AdminDashboard = ({ mockTime }) => {
         const label = u.name || u.username || u.email || `#${u.id}`;
         if (!window.confirm(`Otpustiti korisnika ${label}? Sve njihove nepreuzete narudžbe (${u.unpickedCount}) će biti arhivirane i blokada uklonjena.`)) return;
         try {
-            const res = await fetch(`${API_BASE}/api/users/${u.id}/release`, { method: 'POST' });
+            const res = await apiFetch(`${API_BASE}/api/users/${u.id}/release`, { method: 'POST' });
             const data = await res.json();
             if (data.success) {
                 alert(`Otpušteno: arhivirano ${data.count} narudžbi.`);
@@ -161,7 +169,7 @@ const AdminDashboard = ({ mockTime }) => {
 
         setLoading(true);
         try {
-            const res = await fetch(`${API_BASE}/api/menus`, {
+            const res = await apiFetch(`${API_BASE}/api/menus`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -187,7 +195,7 @@ const AdminDashboard = ({ mockTime }) => {
     const handleUpdateMenu = async () => {
         if (!editingMenu) return;
         try {
-            const res = await fetch(`${API_BASE}/api/menus/${editingMenu.id}`, {
+            const res = await apiFetch(`${API_BASE}/api/menus/${editingMenu.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: editMenuText })
@@ -203,7 +211,7 @@ const AdminDashboard = ({ mockTime }) => {
         if (!editingMenu) return;
         if (!window.confirm("Sigurno obrisati ovo jelo?")) return;
         try {
-            const res = await fetch(`${API_BASE}/api/menus/${editingMenu.id}`, { method: 'DELETE' });
+            const res = await apiFetch(`${API_BASE}/api/menus/${editingMenu.id}`, { method: 'DELETE' });
             if (res.ok) {
                 setMessage('Meni obrisan.');
                 setEditingMenu(null);
@@ -222,7 +230,7 @@ const AdminDashboard = ({ mockTime }) => {
     const handleMoveToNonCollected = async () => {
         if (!window.confirm("Prebaciti sve narudžbe na čekanju u 'Nepreuzeto'?")) return;
         try {
-            const res = await fetch(`${API_BASE}/api/orders/non-collected`, { method: 'POST' });
+            const res = await apiFetch(`${API_BASE}/api/orders/non-collected`, { method: 'POST' });
             const data = await res.json();
             if (data.success) {
                 alert(`Prebačeno ${data.count} narudžbi.`);
@@ -234,7 +242,7 @@ const AdminDashboard = ({ mockTime }) => {
     const handleDeleteAllNonCollected = async () => {
         if (!window.confirm("Sigurno obrisati SVE nepreuzete narudžbe?")) return;
         try {
-            const res = await fetch(`${API_BASE}/api/orders/non-collected`, { method: 'DELETE' });
+            const res = await apiFetch(`${API_BASE}/api/orders/non-collected`, { method: 'DELETE' });
             const data = await res.json();
             if (data.success) {
                 alert(`Obrisano ${data.count} narudžbi.`);
@@ -282,7 +290,7 @@ const AdminDashboard = ({ mockTime }) => {
     // Settings Handlers
     const handleSaveSettings = async () => {
         try {
-            const res = await fetch(`${API_BASE}/api/settings`, {
+            const res = await apiFetch(`${API_BASE}/api/settings`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(settings)
@@ -296,7 +304,7 @@ const AdminDashboard = ({ mockTime }) => {
 
     const confirmPickup = async () => {
         try {
-            const res = await fetch(`${API_BASE}/api/orders/${selectedOrder.id}/pickup`, { method: 'POST' });
+            const res = await apiFetch(`${API_BASE}/api/orders/${selectedOrder.id}/pickup`, { method: 'POST' });
             if (res.ok) { fetchOrders(); setPickupModalOpen(false); setSelectedOrder(null); }
         } catch (err) { console.error(err); }
     };
@@ -687,6 +695,71 @@ const AdminDashboard = ({ mockTime }) => {
                         </div>
 
                         <button onClick={handleSaveSettings} style={{ width: '100%', marginTop: '10px' }}>Spremi Postavke</button>
+
+                        {/* Developer settings — locked behind a password to
+                            keep casual admin clicks away from dev flags. */}
+                        <div style={{ marginTop: '30px', borderTop: '2px dashed #ccc', paddingTop: '20px' }}>
+                            <h3 style={{ margin: '0 0 10px 0', color: '#666' }}>Developer settings</h3>
+                            {!devUnlocked ? (
+                                <div>
+                                    <p style={{ margin: '0 0 10px 0', fontSize: '0.9rem', color: '#777' }}>
+                                        Ova sekcija sadrži interne razvojne opcije. Unesite lozinku za pristup.
+                                    </p>
+                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                        <input
+                                            type="password"
+                                            placeholder="Dev lozinka"
+                                            value={devPasswordInput}
+                                            onChange={e => { setDevPasswordInput(e.target.value); setDevPasswordError(''); }}
+                                            onKeyDown={e => {
+                                                if (e.key === 'Enter') {
+                                                    if (devPasswordInput === DEV_PASSWORD) { setDevUnlocked(true); setDevPasswordError(''); }
+                                                    else setDevPasswordError('Neispravna lozinka.');
+                                                }
+                                            }}
+                                            style={{ flex: 1, minWidth: '180px' }}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (devPasswordInput === DEV_PASSWORD) { setDevUnlocked(true); setDevPasswordError(''); }
+                                                else setDevPasswordError('Neispravna lozinka.');
+                                            }}
+                                            style={{ background: '#555', color: 'white' }}
+                                        >
+                                            Otključaj
+                                        </button>
+                                    </div>
+                                    {devPasswordError && (
+                                        <p style={{ margin: '8px 0 0 0', color: 'var(--color-danger)', fontSize: '0.85rem' }}>{devPasswordError}</p>
+                                    )}
+                                </div>
+                            ) : (
+                                <div>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px', background: '#fafafa', borderRadius: '6px' }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={settings.timeTravelEnabled !== false}
+                                            onChange={e => setSettings({ ...settings, timeTravelEnabled: e.target.checked })}
+                                            style={{ width: 'auto' }}
+                                        />
+                                        <span>
+                                            <strong>Time Travel widget</strong>
+                                            <span style={{ display: 'block', fontSize: '0.8rem', color: '#777' }}>
+                                                Prikazuje plivajući widget za promjenu trenutnog vremena u aplikaciji (razvojni alat). Promjenu primijeni gumbom „Spremi Postavke" iznad.
+                                            </span>
+                                        </span>
+                                    </label>
+                                    <button
+                                        type="button"
+                                        onClick={() => { setDevUnlocked(false); setDevPasswordInput(''); }}
+                                        style={{ marginTop: '10px', background: '#eee', color: '#333', fontSize: '0.85rem', padding: '6px 12px' }}
+                                    >
+                                        Zaključaj
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
