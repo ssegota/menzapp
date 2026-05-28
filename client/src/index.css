@@ -299,3 +299,26 @@ textarea:focus {
 .login-divider span {
   white-space: nowrap;
 }
+
+.rich-editor:empty:before {
+  content: attr(data-placeholder);
+  color: #999;
+  pointer-events: none;
+}
+
+.rich-editor:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(253, 218, 13, 0.2);
+}
+
+.menu-content p {
+  margin: 0.3em 0;
+}
+
+.menu-content :first-child {
+  margin-top: 0;
+}
+
+.menu-content :last-child {
+  margin-bottom: 0;
+}

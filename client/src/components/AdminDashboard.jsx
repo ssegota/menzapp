@@ -1,61 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
-import ReactMarkdown from 'react-markdown';
+import React, { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { apiFetch, API_BASE } from '../api';
-
-// Tiny Markdown toolbar — wraps the current selection (bold/italic) or
-// prepends a line-prefix (heading, list). Stays inside what ReactMarkdown
-// can already render, so no new dependency or renderer config.
-const MarkdownToolbar = ({ textareaRef, value, setValue }) => {
-    const wrap = (token, placeholder = 'tekst') => {
-        const ta = textareaRef.current;
-        if (!ta) return;
-        const start = ta.selectionStart;
-        const end = ta.selectionEnd;
-        const selected = value.substring(start, end) || placeholder;
-        const next = value.substring(0, start) + token + selected + token + value.substring(end);
-        setValue(next);
-        requestAnimationFrame(() => {
-            ta.focus();
-            const caretStart = start + token.length;
-            ta.setSelectionRange(caretStart, caretStart + selected.length);
-        });
-    };
-    const linePrefix = (prefix) => {
-        const ta = textareaRef.current;
-        if (!ta) return;
-        const caret = ta.selectionStart;
-        const lineStart = value.lastIndexOf('\n', caret - 1) + 1;
-        const tail = value.substring(lineStart);
-        const stripped = tail.replace(/^(#{1,6} |- |\* |\d+\. )/, '');
-        const diff = tail.length - stripped.length;
-        const next = value.substring(0, lineStart) + prefix + stripped;
-        setValue(next);
-        requestAnimationFrame(() => {
-            ta.focus();
-            const pos = caret + prefix.length - diff;
-            ta.setSelectionRange(pos, pos);
-        });
-    };
-
-    const btn = { padding: '4px 10px', fontSize: '0.85rem', background: '#eee', color: '#333', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer', minWidth: 'auto' };
-    const sep = { width: '1px', background: '#ccc', margin: '0 4px' };
-
-    return (
-        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '6px', alignItems: 'center' }}>
-            <button type="button" style={{ ...btn, fontWeight: 'bold' }} title="Podebljano (**)" onClick={() => wrap('**')}>B</button>
-            <button type="button" style={{ ...btn, fontStyle: 'italic' }} title="Kurziv (*)" onClick={() => wrap('*')}>I</button>
-            <span style={sep} />
-            <button type="button" style={btn} title="Veliki naslov (#)" onClick={() => linePrefix('# ')}>H1</button>
-            <button type="button" style={btn} title="Srednji naslov (##)" onClick={() => linePrefix('## ')}>H2</button>
-            <button type="button" style={btn} title="Mali naslov (###)" onClick={() => linePrefix('### ')}>H3</button>
-            <span style={sep} />
-            <button type="button" style={btn} title="Lista (-)" onClick={() => linePrefix('- ')}>• Lista</button>
-            <button type="button" style={btn} title="Numerirana lista (1.)" onClick={() => linePrefix('1. ')}>1. Lista</button>
-        </div>
-    );
-};
+import { MenuContent, RichTextEditor } from './RichText';
 
 const AdminDashboard = ({ mockTime }) => {
     const [activeTab, setActiveTab] = useState('menu'); // menu, orders, non-collected, users, settings
@@ -79,8 +26,6 @@ const AdminDashboard = ({ mockTime }) => {
     const [message, setMessage] = useState('');
     const [editingMenu, setEditingMenu] = useState(null); // Menu object being edited
     const [editMenuText, setEditMenuText] = useState('');
-    const menuTextareaRef = useRef(null);
-    const editMenuTextareaRef = useRef(null);
 
     // Orders State
     const [searchCode, setSearchCode] = useState('');
@@ -430,14 +375,10 @@ const AdminDashboard = ({ mockTime }) => {
                         </div>
 
                         <form onSubmit={handleAddMenu}>
-                            <MarkdownToolbar textareaRef={menuTextareaRef} value={menuText} setValue={setMenuText} />
-                            <textarea
-                                ref={menuTextareaRef}
+                            <RichTextEditor
                                 value={menuText}
-                                onChange={e => setMenuText(e.target.value)}
-                                placeholder="Unesite meni (Markdown)..."
-                                rows={6}
-                                style={{ width: '100%', marginBottom: '10px', fontFamily: 'monospace' }}
+                                onChange={setMenuText}
+                                placeholder="Unesite meni ili zalijepite tekst sa scpu.hr..."
                             />
                             <button type="submit" disabled={loading || currentDayMenus.length >= 5} style={{ width: '100%' }}>
                                 {loading ? 'Spremanje...' : 'Dodaj Jelo'}
@@ -466,7 +407,7 @@ const AdminDashboard = ({ mockTime }) => {
                                         onMouseOver={e => e.currentTarget.style.transform = 'scale(1.02)'}
                                         onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
                                     >
-                                        <ReactMarkdown>{m.text}</ReactMarkdown>
+                                        <MenuContent text={m.text} />
                                     </div>
                                 ))}
                             </div>
@@ -531,7 +472,7 @@ const AdminDashboard = ({ mockTime }) => {
                                             <div style={{ fontSize: '0.75rem', color: '#888', marginBottom: '5px' }}>{order.userEmail}</div>
                                         )}
                                         <div style={{ fontSize: '0.9rem' }}>
-                                            {menu ? <ReactMarkdown>{menu.text}</ReactMarkdown> : <ReactMarkdown>{order.menuText || 'Nepoznato jelo (obrisano)'}</ReactMarkdown>}
+                                            <MenuContent text={menu ? menu.text : (order.menuText || 'Nepoznato jelo (obrisano)')} />
                                         </div>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px' }}>
                                             <span style={{ fontSize: '0.8rem', color: '#888' }}>{formatDateEU(order.date)} | {slotLabel(order.slot)}</span>
@@ -577,7 +518,7 @@ const AdminDashboard = ({ mockTime }) => {
                                             <tr key={order.id} style={{ borderBottom: '1px solid #eee' }}>
                                                 <td style={{ padding: '10px' }}>{order.userName || `#${order.userId}`}</td>
                                                 <td style={{ padding: '10px', color: '#666' }}>{order.userEmail || ''}</td>
-                                                <td style={{ padding: '10px' }}>{menu ? <ReactMarkdown>{menu.text}</ReactMarkdown> : <ReactMarkdown>{order.menuText || 'Nepoznato jelo (obrisano)'}</ReactMarkdown>}</td>
+                                                <td style={{ padding: '10px' }}><MenuContent text={menu ? menu.text : (order.menuText || 'Nepoznato jelo (obrisano)')} /></td>
                                                 <td style={{ padding: '10px', whiteSpace: 'nowrap' }}>{formatDateEU(order.date)} ({slotLabel(order.slot)})</td>
                                                 <td style={{ padding: '10px', fontWeight: 'bold' }}>{order.code}</td>
                                             </tr>
@@ -818,10 +759,7 @@ const AdminDashboard = ({ mockTime }) => {
                             {selectedOrder.code}
                         </div>
                         <div style={{ marginBottom: '20px' }}>
-                            {menus.find(m => m.id === selectedOrder.menuId) ?
-                                <ReactMarkdown>{menus.find(m => m.id === selectedOrder.menuId).text}</ReactMarkdown>
-                                : <ReactMarkdown>{selectedOrder.menuText || 'Nepoznato jelo'}</ReactMarkdown>
-                            }
+                            <MenuContent text={menus.find(m => m.id === selectedOrder.menuId)?.text || selectedOrder.menuText || 'Nepoznato jelo'} />
                         </div>
                         <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
                             <button onClick={() => setPickupModalOpen(false)} style={{ background: '#eee', color: '#333' }}>Zatvori</button>
@@ -836,13 +774,11 @@ const AdminDashboard = ({ mockTime }) => {
                 <div className="modal-overlay">
                     <div className="modal-content">
                         <h3>Uredi Meni</h3>
-                        <MarkdownToolbar textareaRef={editMenuTextareaRef} value={editMenuText} setValue={setEditMenuText} />
-                        <textarea
-                            ref={editMenuTextareaRef}
+                        <RichTextEditor
                             value={editMenuText}
-                            onChange={e => setEditMenuText(e.target.value)}
-                            rows={6}
-                            style={{ width: '100%', marginBottom: '20px', fontFamily: 'monospace' }}
+                            onChange={setEditMenuText}
+                            placeholder="Unesite meni ili zalijepite tekst sa scpu.hr..."
+                            style={{ marginBottom: '20px' }}
                         />
                         <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
                             <button onClick={handleDeleteMenu} style={{ background: 'var(--color-danger)', color: 'white', marginRight: 'auto' }}>Obriši</button>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import ReactMarkdown from 'react-markdown';
+import { MenuContent } from './RichText';
 import { apiFetch, API_BASE } from '../api';
 
 const UserDashboard = ({ user, mockTime }) => {
@@ -330,9 +330,9 @@ const UserDashboard = ({ user, mockTime }) => {
                                                     background: '#fff'
                                                 }}
                                             >
-                                                <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem', color: 'var(--color-accent)' }}>
-                                                    <ReactMarkdown>{menu.text}</ReactMarkdown>
-                                                </h3>
+                                                <div style={{ margin: '0 0 10px 0', fontSize: '1.1rem', color: 'var(--color-accent)', fontWeight: 700 }}>
+                                                    <MenuContent text={menu.text} />
+                                                </div>
                                                 <span style={{ fontSize: '0.9rem', color: '#888' }}>Klikni za odabir</span>
                                             </div>
                                         ))
@@ -368,7 +368,7 @@ const UserDashboard = ({ user, mockTime }) => {
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <div>
                                                     <strong style={{ color: 'var(--color-text)' }}>
-                                                        {menu ? <ReactMarkdown>{menu.text}</ReactMarkdown> : <ReactMarkdown>{order.menuText || 'Nepoznato jelo'}</ReactMarkdown>}
+                                                        <MenuContent text={menu ? menu.text : (order.menuText || 'Nepoznato jelo')} />
                                                     </strong>
                                                     <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '4px' }}>
                                                         Kod: <span style={{ fontWeight: 'bold', color: 'var(--color-primary)', background: '#333', padding: '2px 6px', borderRadius: '4px' }}>{order.code}</span>
@@ -421,7 +421,7 @@ const UserDashboard = ({ user, mockTime }) => {
                                         return (
                                             <tr key={order.id} style={{ borderBottom: '1px solid #eee' }}>
                                                 <td style={{ padding: '10px' }}>
-                                                    {menu ? <ReactMarkdown>{menu.text}</ReactMarkdown> : <ReactMarkdown>{order.menuText || 'Nepoznato jelo'}</ReactMarkdown>}
+                                                    <MenuContent text={menu ? menu.text : (order.menuText || 'Nepoznato jelo')} />
                                                 </td>
                                                 <td style={{ padding: '10px' }}>{formatDateEU(order.date)} ({getSlotName(order.slot)})</td>
                                                 <td style={{ padding: '10px' }}>
@@ -456,7 +456,7 @@ const UserDashboard = ({ user, mockTime }) => {
                                 <h3 style={{ marginTop: 0 }}>Potvrda narudžbe</h3>
                                 <p style={{ margin: '0 0 6px 0' }}>Želite li naručiti <strong>{getSlotName(selectedSlot).toLowerCase()}</strong> za <strong>{formatDateEU(targetDateStr)}</strong>:</p>
                                 <div style={{ fontSize: '1.2rem', color: 'var(--color-accent)' }}>
-                                    <ReactMarkdown>{selectedMenu.text}</ReactMarkdown>
+                                    <MenuContent text={selectedMenu.text} />
                                 </div>
 
                                 <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '20px' }}>
@@ -565,9 +565,7 @@ const UserDashboard = ({ user, mockTime }) => {
                         <h3 style={{ marginTop: 0 }}>Detalji narudžbe</h3>
                         <div>
                             <strong>Jelo:</strong>
-                            {menus.find(m => m.id === editingOrder.menuId) ?
-                                <ReactMarkdown>{menus.find(m => m.id === editingOrder.menuId).text}</ReactMarkdown>
-                                : <ReactMarkdown>{editingOrder.menuText || 'Nepoznato jelo (obrisano)'}</ReactMarkdown>}
+                            <MenuContent text={menus.find(m => m.id === editingOrder.menuId)?.text || editingOrder.menuText || 'Nepoznato jelo (obrisano)'} />
                         </div>
                         <p><strong>Kod za preuzimanje:</strong></p>
                         <div style={{
