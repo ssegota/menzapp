@@ -234,13 +234,13 @@ napraviti nakon završetka popodnevnog termina:
 
 1. Kliknite **„Prebaci u Nepreuzeto"**.
 2. Potvrdite dijalog.
-3. Narudžbe za današnji datum koje su još uvijek na čekanju postaju
-   nepreuzete i prelaze u sljedeći tab.
+3. Sve narudžbe koje su još uvijek na čekanju postaju nepreuzete i
+   prelaze u sljedeći tab.
 
-> **Sigurnosno ograničenje:** Akcija djeluje **isključivo na narudžbe
-> čiji je datum današnji ili stariji**. Pred-narudžbe za iduće radne
-> dane su zaštićene i ostaju netaknute — možete bez brige kliknuti
-> gumb na kraju dana.
+> **Pažnja:** Akcija djeluje na **sve narudžbe na čekanju**,
+> uključujući pred-narudžbe za buduće dane. Gumb prikazuje ukupan broj
+> u zagradi, a dijalog razdvaja prošle/današnje i buduće narudžbe prije
+> potvrde — pročitajte prije klika.
 
 ### 2.5 Tab „Nepreuzeto" — izvještaji i čišćenje
 

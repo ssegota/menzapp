@@ -228,7 +228,13 @@ const AdminDashboard = ({ mockTime }) => {
 
     // Orders Handlers
     const handleMoveToNonCollected = async () => {
-        if (!window.confirm("Prebaciti sve narudžbe na čekanju u 'Nepreuzeto'?")) return;
+        const total = pendingOrders.length;
+        const past = pastOrTodayPending;
+        const future = futurePending;
+        const msg = future > 0
+            ? `Prebaciti ${total} narudžbi na čekanju u Nepreuzeto?\n\n• ${past} s datumom ≤ ${todayStr}\n• ${future} pred-narudžbe za buduće dane (bit će također arhivirane).`
+            : `Prebaciti ${total} narudžbi na čekanju u Nepreuzeto?`;
+        if (!window.confirm(msg)) return;
         try {
             const res = await apiFetch(`${API_BASE}/api/orders/non-collected`, { method: 'POST' });
             const data = await res.json();
@@ -321,12 +327,13 @@ const AdminDashboard = ({ mockTime }) => {
     // Filter logic
     const pendingOrders = orders.filter(o => o.status === 'pending');
     const nonCollectedOrders = orders.filter(o => o.status === 'non_collected');
-    // "Prebaci u Nepreuzeto" only affects pending orders whose meal date
-    // is today-or-earlier — pre-orders for the next workday must stay
-    // pending until their own day passes. We surface this count on the
-    // button so admins see when there's nothing to move.
     const todayStr = `${mockTime.getFullYear()}-${String(mockTime.getMonth() + 1).padStart(2, '0')}-${String(mockTime.getDate()).padStart(2, '0')}`;
-    const moveableToNonCollectedCount = pendingOrders.filter(o => o.date <= todayStr).length;
+    // For the "Prebaci u Nepreuzeto" confirmation: split today-or-earlier
+    // vs future so the admin sees if they're about to sweep next-workday
+    // pre-orders alongside actual no-shows. The server moves every pending
+    // order regardless — this is just the up-front warning.
+    const pastOrTodayPending = pendingOrders.filter(o => o.date <= todayStr).length;
+    const futurePending = pendingOrders.length - pastOrTodayPending;
     const getFilteredPending = () => {
         let filtered = pendingOrders;
         if (orderSlotFilter !== 'all') {
@@ -474,13 +481,13 @@ const AdminDashboard = ({ mockTime }) => {
                         />
                         <button
                             onClick={handleMoveToNonCollected}
-                            disabled={moveableToNonCollectedCount === 0}
-                            title={moveableToNonCollectedCount === 0
-                                ? `Nema narudžbi za prebaciti. Akcija djeluje samo na narudžbe s datumom ≤ danas (${todayStr}); pre-narudžbe za idući radni dan su zaštićene.`
-                                : `Prebacuje narudžbe s datumom ≤ ${todayStr} u nepreuzete.`}
-                            style={{ background: moveableToNonCollectedCount === 0 ? '#bbb' : 'var(--color-danger)', color: 'white', width: '100%', maxWidth: '300px', cursor: moveableToNonCollectedCount === 0 ? 'not-allowed' : 'pointer' }}
+                            disabled={pendingOrders.length === 0}
+                            title={pendingOrders.length === 0
+                                ? 'Nema narudžbi na čekanju.'
+                                : `Prebacuje svih ${pendingOrders.length} narudžbi na čekanju u nepreuzete.`}
+                            style={{ background: pendingOrders.length === 0 ? '#bbb' : 'var(--color-danger)', color: 'white', width: '100%', maxWidth: '300px', cursor: pendingOrders.length === 0 ? 'not-allowed' : 'pointer' }}
                         >
-                            Prebaci u Nepreuzeto ({moveableToNonCollectedCount})
+                            Prebaci u Nepreuzeto ({pendingOrders.length})
                         </button>
                     </div>
 
@@ -756,17 +763,26 @@ const AdminDashboard = ({ mockTime }) => {
                                         <span>
                                             <strong>Time Travel widget</strong>
                                             <span style={{ display: 'block', fontSize: '0.8rem', color: '#777' }}>
-                                                Prikazuje plivajući widget za promjenu trenutnog vremena u aplikaciji (razvojni alat). Promjenu primijeni gumbom „Spremi Postavke" iznad.
+                                                Prikazuje plivajući widget za promjenu trenutnog vremena u aplikaciji (razvojni alat).
                                             </span>
                                         </span>
                                     </label>
-                                    <button
-                                        type="button"
-                                        onClick={() => { setDevUnlocked(false); setDevPasswordInput(''); }}
-                                        style={{ marginTop: '10px', background: '#eee', color: '#333', fontSize: '0.85rem', padding: '6px 12px' }}
-                                    >
-                                        Zaključaj
-                                    </button>
+                                    <div style={{ display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
+                                        <button
+                                            type="button"
+                                            onClick={handleSaveSettings}
+                                            style={{ background: 'var(--color-success)', color: 'white', fontSize: '0.9rem', padding: '8px 16px' }}
+                                        >
+                                            Spremi Dev postavke
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => { setDevUnlocked(false); setDevPasswordInput(''); }}
+                                            style={{ background: '#eee', color: '#333', fontSize: '0.85rem', padding: '6px 12px' }}
+                                        >
+                                            Zaključaj
+                                        </button>
+                                    </div>
                                 </div>
                             )}
                         </div>

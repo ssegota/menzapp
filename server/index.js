@@ -213,16 +213,16 @@ app.put('/api/orders/:id', (req, res) => {
     }
 });
 
-// POST move to non-collected (Admin). Only affects orders whose meal date
-// is today or earlier — tomorrow's pre-orders are protected so an admin
-// can't accidentally archive them by clicking this at end-of-day.
+// POST move to non-collected (Admin). Moves every pending order to
+// non_collected. The client surfaces the count up-front and the
+// confirmation dialog quotes it, so an admin can see at a glance
+// whether they're about to sweep pre-orders for future days too.
 app.post('/api/orders/non-collected', (req, res) => {
     console.log("Moving pending orders to non-collected...");
     const data = readData();
-    const today = todayStr(req.currentDate);
     let count = 0;
     data.orders.forEach(o => {
-        if (o.status === 'pending' && o.date <= today) {
+        if (o.status === 'pending') {
             o.status = 'non_collected';
             count++;
         }
