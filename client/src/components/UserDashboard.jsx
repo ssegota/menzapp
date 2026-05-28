@@ -121,10 +121,13 @@ const UserDashboard = ({ user, mockTime }) => {
     const closeConfirmModal = () => {
         setConfirmModalOpen(false);
         setConfirmStep('select');
+        setConfirmError('');
     };
 
+    const [confirmError, setConfirmError] = useState('');
     const confirmOrder = async () => {
         setLoading(true);
+        setConfirmError('');
         try {
             const res = await fetch(`${API_BASE}/api/orders`, {
                 method: 'POST',
@@ -136,15 +139,18 @@ const UserDashboard = ({ user, mockTime }) => {
                     slot: selectedSlot
                 })
             });
-            const data = await res.json();
-            if (data.success) {
+            const data = await res.json().catch(() => ({}));
+            if (res.ok && data.success) {
                 setMessage('Narudžba zabilježena!');
                 setConfirmedOrderCode(data.order.code);
                 setConfirmStep('success');
                 fetchOrders();
+            } else {
+                setConfirmError(data.error || `Narudžba nije uspjela (HTTP ${res.status}).`);
             }
         } catch (err) {
-            setMessage('Greška prilikom naručivanja.');
+            console.error('order POST failed:', err);
+            setConfirmError('Greška mreže prilikom naručivanja. Pokušajte ponovo.');
         }
         setLoading(false);
     };
@@ -490,10 +496,15 @@ const UserDashboard = ({ user, mockTime }) => {
                                     Klikom „Potvrđujem narudžbu" potvrđujete da ste pročitali, razumjeli i u cijelosti prihvatili gore navedene uvjete.
                                 </p>
 
+                                {confirmError && (
+                                    <div style={{ marginTop: '12px', padding: '10px 12px', background: '#ffebee', color: '#c62828', border: '1px solid #ef9a9a', borderRadius: '6px', fontSize: '0.9rem', textAlign: 'center' }}>
+                                        {confirmError}
+                                    </div>
+                                )}
+
                                 <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '16px', flexWrap: 'wrap' }}>
-                                    <button onClick={() => setConfirmStep('select')} style={{ background: '#eee', color: '#333' }}>Natrag</button>
-                                    <button onClick={closeConfirmModal} style={{ background: '#eee', color: '#333' }}>Odustani</button>
-                                    <button onClick={confirmOrder} disabled={loading} style={{ background: 'var(--color-danger)', color: 'white' }}>
+                                    <button onClick={() => { setConfirmStep('select'); setConfirmError(''); }} style={{ background: '#eee', color: '#333' }}>Natrag</button>
+                                    <button onClick={confirmOrder} disabled={loading} style={{ background: 'var(--color-success)', color: 'white' }}>
                                         {loading ? 'Slanje...' : 'Potvrđujem narudžbu'}
                                     </button>
                                 </div>
