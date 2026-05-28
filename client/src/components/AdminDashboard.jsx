@@ -6,9 +6,11 @@ import 'react-calendar/dist/Calendar.css';
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 
 const AdminDashboard = ({ mockTime }) => {
-    const [activeTab, setActiveTab] = useState('menu'); // menu, orders, non-collected, settings
+    const [activeTab, setActiveTab] = useState('menu'); // menu, orders, non-collected, users, settings
     const [menus, setMenus] = useState([]);
     const [orders, setOrders] = useState([]);
+    const [users, setUsers] = useState([]);
+    const [userSearch, setUserSearch] = useState('');
     const [settings, setSettings] = useState({
         orderingStart: 8,
         orderingEnd: 24,
@@ -36,6 +38,7 @@ const AdminDashboard = ({ mockTime }) => {
         fetchMenus();
         fetchOrders();
         fetchSettings();
+        fetchUsers();
         setSelectedDate(mockTime);
     }, [mockTime]);
 
@@ -61,6 +64,33 @@ const AdminDashboard = ({ mockTime }) => {
             const data = await res.json();
             setSettings(data);
         } catch (err) { }
+    };
+
+    const fetchUsers = async () => {
+        try {
+            const res = await fetch(`${API_BASE}/api/users`);
+            const data = await res.json();
+            setUsers(data);
+        } catch (err) { }
+    };
+
+    const handleReleaseUser = async (u) => {
+        const label = u.name || u.username || u.email || `#${u.id}`;
+        if (!window.confirm(`Otpustiti korisnika ${label}? Sve njihove nepreuzete narudžbe (${u.unpickedCount}) će biti arhivirane i blokada uklonjena.`)) return;
+        try {
+            const res = await fetch(`${API_BASE}/api/users/${u.id}/release`, { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                alert(`Otpušteno: arhivirano ${data.count} narudžbi.`);
+                fetchUsers();
+                fetchOrders();
+            } else {
+                alert(data.error || 'Otpuštanje nije uspjelo.');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Greška mreže pri otpuštanju.');
+        }
     };
 
     const formatDateEU = (dateStr) => {
@@ -242,7 +272,7 @@ const AdminDashboard = ({ mockTime }) => {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '1000px', margin: '0 auto' }}>
             <div style={{ display: 'flex', gap: '15px', marginBottom: '25px', width: '100%', justifyContent: 'center', flexWrap: 'wrap' }}>
-                {['menu', 'orders', 'non-collected', 'settings'].map(tab => (
+                {['menu', 'orders', 'non-collected', 'users', 'settings'].map(tab => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
@@ -262,6 +292,7 @@ const AdminDashboard = ({ mockTime }) => {
                         {tab === 'menu' && 'Meni'}
                         {tab === 'orders' && 'Narudžbe'}
                         {tab === 'non-collected' && 'Nepreuzeto'}
+                        {tab === 'users' && 'Korisnici'}
                         {tab === 'settings' && 'Postavke'}
                     </button>
                 ))}
@@ -455,6 +486,85 @@ const AdminDashboard = ({ mockTime }) => {
                             </table>
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* USERS TAB */}
+            {activeTab === 'users' && (
+                <div className="card" style={{ width: '100%', padding: '30px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px', marginBottom: '20px' }}>
+                        <h2 className="title" style={{ fontSize: '1.8rem', margin: 0 }}>Korisnici</h2>
+                        <p style={{ margin: 0, color: '#666', fontSize: '0.9rem', textAlign: 'center' }}>
+                            Korisnici s 3+ nepreuzete narudžbe su blokirani. Klikom na <strong>Otpusti</strong> arhiviraju se njihove nepreuzete narudžbe i blokada se uklanja.
+                        </p>
+                        <input
+                            type="text"
+                            placeholder="Traži po imenu ili emailu..."
+                            value={userSearch}
+                            onChange={e => setUserSearch(e.target.value)}
+                            style={{ width: '100%', maxWidth: '400px', textAlign: 'center', padding: '10px', borderRadius: '8px' }}
+                        />
+                    </div>
+
+                    {(() => {
+                        const q = userSearch.trim().toLowerCase();
+                        const filtered = users.filter(u => {
+                            if (!q) return true;
+                            return (u.name || '').toLowerCase().includes(q)
+                                || (u.username || '').toLowerCase().includes(q)
+                                || (u.email || '').toLowerCase().includes(q);
+                        });
+                        if (filtered.length === 0) {
+                            return <p style={{ textAlign: 'center', color: '#888' }}>Nema korisnika koji odgovaraju pretrazi.</p>;
+                        }
+                        return (
+                            <div style={{ overflowX: 'auto', width: '100%', WebkitOverflowScrolling: 'touch' }}>
+                                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
+                                    <thead>
+                                        <tr style={{ background: '#f5f5f5', textAlign: 'left' }}>
+                                            <th style={{ padding: '10px' }}>Ime</th>
+                                            <th style={{ padding: '10px' }}>Email</th>
+                                            <th style={{ padding: '10px', textAlign: 'center' }}>Nepreuzete</th>
+                                            <th style={{ padding: '10px', textAlign: 'center' }}>Status</th>
+                                            <th style={{ padding: '10px', textAlign: 'center' }}>Akcija</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {filtered.map(u => (
+                                            <tr key={u.id} style={{ borderBottom: '1px solid #eee' }}>
+                                                <td style={{ padding: '10px' }}>{u.name || u.username || `#${u.id}`}</td>
+                                                <td style={{ padding: '10px', color: '#666' }}>{u.email || ''}</td>
+                                                <td style={{ padding: '10px', textAlign: 'center', fontWeight: 'bold', color: u.unpickedCount > 0 ? (u.isBanned ? '#c62828' : '#ef6c00') : '#2e7d32' }}>
+                                                    {u.unpickedCount}
+                                                </td>
+                                                <td style={{ padding: '10px', textAlign: 'center' }}>
+                                                    {u.role === 'admin' ? (
+                                                        <span style={{ background: '#e0e0e0', color: '#555', padding: '4px 10px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 'bold' }}>Admin</span>
+                                                    ) : u.isBanned ? (
+                                                        <span style={{ background: '#ffebee', color: '#c62828', padding: '4px 10px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 'bold' }}>Blokiran</span>
+                                                    ) : (
+                                                        <span style={{ background: '#e8f5e9', color: '#2e7d32', padding: '4px 10px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 'bold' }}>OK</span>
+                                                    )}
+                                                </td>
+                                                <td style={{ padding: '10px', textAlign: 'center' }}>
+                                                    {u.role !== 'admin' && u.unpickedCount > 0 ? (
+                                                        <button
+                                                            onClick={() => handleReleaseUser(u)}
+                                                            style={{ background: 'var(--color-success)', color: 'white', padding: '6px 14px', fontSize: '0.85rem' }}
+                                                        >
+                                                            Otpusti
+                                                        </button>
+                                                    ) : (
+                                                        <span style={{ color: '#bbb' }}>—</span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        );
+                    })()}
                 </div>
             )}
 

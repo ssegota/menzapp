@@ -114,7 +114,24 @@ prihvaćenima pri narudžbi.
 Tab **Povijest Narudžbi** prikazuje sve vaše ranije narudžbe – one koje
 ste preuzeli i one koje ste propustili preuzeti.
 
-### 1.7 Najčešća pitanja
+### 1.7 Blokada zbog nepreuzetih narudžbi
+
+Sustav automatski prati broj **nepreuzetih** narudžbi po korisniku
+(narudžbe koje ste naručili, ali niste preuzeli u danom terminu).
+
+- Svaka nepreuzeta narudžba povećava brojač.
+- Kad brojač dosegne **3 nepreuzete narudžbe**, naručivanje se za vas
+  **automatski blokira**. Na stranici naručivanja vidite crvenu poruku
+  „Naručivanje je blokirano" zajedno s trenutnim brojem nepreuzetih.
+- Otkazivanje narudžbe na vrijeme **ne broji** kao nepreuzeta — samo
+  zaista propušteno preuzimanje.
+
+**Skidanje blokade:** obratite se administratoru menze. Administrator
+u svom sučelju može pregledati Vaš status, vidjeti broj nepreuzetih i
+**otpustiti** Vas — time se postojeće nepreuzete arhiviraju, brojač se
+resetira na 0, a Vi ponovno možete naručivati.
+
+### 1.8 Najčešća pitanja
 
 - **Ne vidim gumb „Sign in with Google".** Osvježite stranicu (Ctrl+F5).
   Ako se i dalje ne pojavljuje, javite administratoru.
@@ -156,7 +173,8 @@ Administratorsko sučelje ima četiri taba:
 | **Jelovnik** *(Menu)* | Unos jela za pojedini dan i termin |
 | **Narudžbe** | Pregled pristiglih narudžbi i izdavanje obroka |
 | **Nepreuzeto** | Izvoz u CSV i čišćenje nepreuzetih narudžbi |
-| **Postavke** | Radno vrijeme termina i vremena isporuke |
+| **Korisnici** | Pregled, pretraga i otpuštanje blokiranih korisnika |
+| **Postavke** | Prozor naručivanja i vremena isporuke |
 
 ### 2.3 Tab „Jelovnik" — upravljanje jelima
 
@@ -256,7 +274,40 @@ Gumb **„Obriši Sve"** arhivira sve nepreuzete narudžbe i čisti listu.
 Korisno za održavanje preglednosti – preporuča se napraviti tek nakon
 što ste izvezli CSV.
 
-### 2.6 Tab „Postavke" — prozor naručivanja i isporuka
+### 2.6 Tab „Korisnici" — pregled i otpuštanje
+
+Sustav prati broj nepreuzetih narudžbi po korisniku. **Korisnik s 3 ili
+više nepreuzetih je automatski blokiran** — ne može naručivati dok ga
+administrator ne otpusti.
+
+**Pretraga i pregled:**
+
+- Polje **„Traži po imenu ili emailu…"** filtrira tablicu u stvarnom
+  vremenu — pretražuje po imenu, korisničkom imenu i e-mailu.
+- Tablica prikazuje za svakog korisnika:
+
+| Stupac | Značenje |
+|---|---|
+| **Ime** | Ime iz Google profila ili korisničko ime |
+| **Email** | Adresa e-pošte |
+| **Nepreuzete** | Broj trenutno nepreuzetih narudžbi |
+| **Status** | *OK* (zeleno), *Blokiran* (crveno) ili *Admin* (sivo) |
+| **Akcija** | Gumb **Otpusti** (vidljiv samo ako korisnik ima nepreuzete) |
+
+**Otpuštanje korisnika:**
+
+1. Pronađite korisnika u tablici.
+2. Kliknite gumb **„Otpusti"** u njegovom retku.
+3. Potvrdite dijalog s prikazom broja narudžbi koje će biti arhivirane.
+4. Sve nepreuzete narudžbe tog korisnika prelaze u status *arhivirano*,
+   brojač pada na 0 i blokada se uklanja. Korisnik može odmah naručiti
+   ponovno.
+
+> **Napomena:** Otpuštanje djeluje **samo na tog jednog korisnika**.
+> Gumb *„Obriši Sve"* u tabu *Nepreuzeto* je bulk-akcija koja arhivira
+> nepreuzete svih korisnika odjednom — koristi se nakon izvoza CSV-a.
+
+### 2.7 Tab „Postavke" — prozor naručivanja i isporuka
 
 **Vrijeme naručivanja:**
 - *Početak (sat)* i *Kraj (sat)* – jedinstveni dnevni prozor unutar
@@ -281,7 +332,7 @@ primjenjuju odmah.
 > određuje i prozor otkazivanja. Ako ga skratite (npr. na 8–22),
 > korisnici od 22:00 nadalje ne mogu ni naručivati ni otkazivati.
 
-### 2.7 Tipični dnevni tijek (workflow)
+### 2.8 Tipični dnevni tijek (workflow)
 
 1. **Ujutro prije termina** – u tabu *Jelovnik* unesite jela za danas
    (jutro i, ako je uključeno, popodne).
@@ -292,7 +343,7 @@ primjenjuju odmah.
 4. **Na kraju dana / tjedna** – u tabu *Nepreuzeto* preuzmite CSV za
    evidenciju, zatim *„Obriši Sve"* da očistite listu.
 
-### 2.8 Sigurnosne napomene
+### 2.9 Sigurnosne napomene
 
 - Korisnička prijava strogo je vezana uz `unipu.hr` Google Workspace
   domenu; ograničenje provjerava poslužitelj kroz potpisani `hd` zahtjev

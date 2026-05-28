@@ -164,6 +164,15 @@ app.post('/api/orders', (req, res) => {
     if (!date || date <= todayStr(req.currentDate)) {
         return res.status(403).json({ error: "Naručivanje za današnji ili prošli dan nije moguće." });
     }
+    // Strikeout: 3+ non-collected orders blocks further ordering until an
+    // admin releases the user.
+    const orderingUser = data.users.find(u => u.id === userId);
+    if (orderingUser && orderingUser.role !== 'admin') {
+        const unpicked = unpickedCountFor(userId, data.orders);
+        if (unpicked >= NON_COLLECTED_BAN_THRESHOLD) {
+            return res.status(403).json({ error: `Naručivanje je blokirano — imate ${unpicked} nepreuzete narudžbe. Obratite se administratoru menze za odblokiranje.` });
+        }
+    }
 
     // Generate 6 digit code
     const code = Math.floor(100000 + Math.random() * 900000).toString();
@@ -262,6 +271,12 @@ const isOrderCancelable = (order, now, settings) => {
     if (!order || !order.date) return false;
     return todayStr(now) < order.date && isWithinOrderingWindow(now, settings);
 };
+
+// Strike-out rule: a user with this many non-collected orders is blocked
+// from placing new orders until an admin releases them.
+const NON_COLLECTED_BAN_THRESHOLD = 3;
+const unpickedCountFor = (userId, orders) =>
+    orders.filter(o => o.userId === userId && o.status === 'non_collected').length;
 
 // DELETE order — user cancellation, only inside the slot's working hours.
 app.delete('/api/orders/:id', (req, res) => {
@@ -435,6 +450,43 @@ app.post('/api/login', (req, res) => {
     } else {
         res.status(401).json({ error: "Krivi podaci za prijavu" });
     }
+});
+
+// GET users (admin "Korisnici" view). Strips passwordHash and joins in
+// each user's non-collected count + ban state so the admin can search
+// and decide who to release without a second round-trip.
+app.get('/api/users', (req, res) => {
+    const data = readData();
+    const safe = data.users.map(u => {
+        const { passwordHash, ...rest } = u;
+        const unpickedCount = unpickedCountFor(u.id, data.orders);
+        const isBanned = u.role !== 'admin' && unpickedCount >= NON_COLLECTED_BAN_THRESHOLD;
+        return { ...rest, unpickedCount, isBanned };
+    });
+    res.json(safe);
+});
+
+// POST release — admin clears a user's non-collected slate by archiving
+// every non_collected order they hold. Resets their unpicked count to 0
+// and lifts the ban.
+app.post('/api/users/:id/release', (req, res) => {
+    const idParam = req.params.id;
+    const idNum = Number(idParam);
+    const data = readData();
+    const user = data.users.find(u => u.id === idNum || u.id === idParam);
+    if (!user) {
+        return res.status(404).json({ error: "Korisnik nije pronađen" });
+    }
+    let count = 0;
+    data.orders.forEach(o => {
+        if ((o.userId === user.id) && o.status === 'non_collected') {
+            o.status = 'archived';
+            count++;
+        }
+    });
+    writeData(data);
+    console.log(`Released user ${user.id} (${user.username || user.email}) — archived ${count} non-collected orders.`);
+    res.json({ success: true, count });
 });
 
 // The "catchall" handler: for any request that doesn't

@@ -171,6 +171,12 @@ const UserDashboard = ({ user, mockTime }) => {
 
     const availableMenus = menus.filter(m => m.date === targetDateStr && m.slot === selectedSlot);
 
+    // Strike-out: 3 non_collected orders blocks further ordering until an
+    // admin releases the user. Mirrors the server gate on POST.
+    const NON_COLLECTED_BAN_THRESHOLD = 3;
+    const myUnpickedCount = orders.filter(o => o.userId === user.id && o.status === 'non_collected').length;
+    const isUserBanned = user.role !== 'admin' && myUnpickedCount >= NON_COLLECTED_BAN_THRESHOLD;
+
     // Show all active orders for this user
     const myActiveOrders = orders.filter(o => o.userId === user.id && o.status === 'pending');
 
@@ -213,7 +219,27 @@ const UserDashboard = ({ user, mockTime }) => {
                     <div className="card" style={{ padding: '30px' }}>
                         <h2 className="title" style={{ fontSize: '1.8rem' }}>Naručivanje obroka</h2>
 
-                        {!isOrderingActive ? (
+                        {isUserBanned ? (
+                            <div style={{
+                                padding: '20px',
+                                borderRadius: '8px',
+                                background: '#ffebee',
+                                color: '#c62828',
+                                textAlign: 'center',
+                                border: '2px solid #c62828'
+                            }}>
+                                <p style={{ margin: '0 0 8px 0', fontSize: '1.15rem', fontWeight: '700' }}>
+                                    Naručivanje je blokirano.
+                                </p>
+                                <p style={{ margin: '0 0 6px 0', fontSize: '0.95rem' }}>
+                                    Evidentirano je <strong>{myUnpickedCount}</strong> nepreuzete narudžbe.
+                                    Kad broj nepreuzetih dosegne <strong>{NON_COLLECTED_BAN_THRESHOLD}</strong>, naručivanje se automatski blokira.
+                                </p>
+                                <p style={{ margin: 0, fontSize: '0.9rem', color: '#7f1d1d' }}>
+                                    Za odblokiranje obratite se administratoru menze.
+                                </p>
+                            </div>
+                        ) : !isOrderingActive ? (
                             <div style={{
                                 padding: '20px',
                                 borderRadius: '8px',
