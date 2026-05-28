@@ -43,27 +43,38 @@ Nakon prijave dostupna su tri taba u vrhu ekrana:
 
 ### 1.3 Naručivanje obroka
 
-Naručivanje je dostupno **samo unutar radnih sati menze** koje definira
-administrator. Tipično:
+Naručivanje radi po sustavu **„narudžba dan unaprijed"**:
 
-- **Jutarnji termin:** npr. 08:00 – 10:00
-- **Popodnevni termin:** npr. 14:00 – 16:00 *(ako je uključen)*
+- Obrok naručujete za **idući radni dan**. Petkom se prikazuje meni za
+  ponedjeljak (vikend se preskače).
+- Postoji **jedan dnevni prozor naručivanja** — po zadanim postavkama od
+  **08:00 do ponoći (00:00)**. Točan raspored može mijenjati
+  administrator u postavkama.
+- Unutar tog prozora možete naručivati i otkazivati za idući radni dan.
+  Izvan prozora aplikacija ne prima nove narudžbe niti otkazivanja.
+- Termin (jutro / popodne) sami birate pri narudžbi; nije vezan uz
+  trenutno vrijeme. Popodnevni termin je vidljiv samo ako ga
+  administrator nije isključio u postavkama.
 
 Postupak:
 
 1. Otvorite tab **Nova Narudžba**.
-2. Ako je termin aktivan, prikazat će se popis dostupnih jela za današnji
-   dan i trenutni termin (jutro ili popodne).
-3. Kliknite na željeno jelo.
-4. U dijalogu potvrdite narudžbu.
-5. Nakon potvrde dobit ćete **šesteroznamenkasti kod** koji predstavlja
-   vašu narudžbu.
+2. Pri vrhu se prikazuje datum za koji se naručuje i rok do kojeg se
+   smije naručivati/otkazivati.
+3. Odaberite termin: **Jutro** ili **Popodne** (popodne je vidljivo
+   samo ako ga administrator nije isključio u postavkama).
+4. Kliknite na željeno jelo. Otvara se prozor s potvrdom narudžbe.
+5. Klikom **„Potvrdi"** otvara se **pravna obavijest** s detaljnim
+   uvjetima narudžbe — pažljivo je pročitajte.
+6. Klikom **„Potvrđujem narudžbu"** narudžba se konačno bilježi i
+   dobivate **šesteroznamenkasti kod** za preuzimanje.
 
-> **Napomena:** Izvan radnih sati prikazuje se poruka *„Kuhinja ne prima
-> narudžbe."* zajedno s rasporedom termina. Tada novu narudžbu nije
-> moguće napraviti.
+> **Važno:** Klikom „Potvrđujem narudžbu" preuzimate obvezujuću narudžbu
+> koja podrazumijeva obvezu plaćanja punog iznosa cijene obroka prema
+> važećem cjeniku menze, neovisno o tome jeste li obrok preuzeli ili ne.
+> Detalji su navedeni u samoj pravnoj obavijesti unutar aplikacije.
 
-Možete naručiti više obroka u istom terminu (svaki dobiva svoj kod).
+Možete naručiti više obroka za isti dan/termin (svaki dobiva svoj kod).
 
 ### 1.4 Pregled aktivnih narudžbi i preuzimanje
 
@@ -80,9 +91,11 @@ narudžbama – preselit će se u **Povijest**.
 
 ### 1.5 Otkazivanje narudžbe
 
-Narudžbu možete otkazati samo dok traje radno vrijeme termina u kojem
-je naručena. Nakon što završi taj termin, hrana se već priprema i
-otkazivanje više nije moguće.
+Narudžbu je moguće otkazati **tijekom dnevnog prozora naručivanja**
+(npr. 08:00 – 00:00 po zadanim postavkama), i samo dok je datum
+narudžbe još uvijek u budućnosti. Kad prozor zatvori ili kad postaje
+dan narudžbe, hrana je uračunata u plan kuhinje i otkazivanje više nije
+moguće.
 
 Postupak:
 
@@ -92,8 +105,9 @@ Postupak:
 
 Ako gumb za otkazivanje nije prikazan, već stoji poruka *„Otkazivanje
 narudžbe više nije moguće — vrijeme za otkazivanje je prošlo."*, znači da
-je termin završen. U tom slučaju, ako narudžbu ne preuzmete, na kraju
-dana će biti označena kao **nepreuzeta**.
+je rok prošao. U tom slučaju, ako narudžbu ne preuzmete, na kraju dana
+će biti označena kao **nepreuzeta** i naplaćuje se sukladno uvjetima
+prihvaćenima pri narudžbi.
 
 ### 1.6 Povijest narudžbi
 
@@ -104,10 +118,12 @@ ste preuzeli i one koje ste propustili preuzeti.
 
 - **Ne vidim gumb „Sign in with Google".** Osvježite stranicu (Ctrl+F5).
   Ako se i dalje ne pojavljuje, javite administratoru.
-- **Prijavio sam se, ali nema ničega za naručiti.** Vjerojatno trenutni
-  termin nije aktivan ili administrator još nije unio jela za danas.
-- **Pogrešno sam naručio i ne stignem otkazati.** Javite se osoblju
-  menze osobno; administrator po potrebi može intervenirati.
+- **Prijavio sam se, ali nema ničega za naručiti.** Administrator još
+  nije unio jela za idući radni dan, ili je odabrani termin
+  (jutro/popodne) prazan — probajte i drugi termin.
+- **Pogrešno sam naručio i prošla je ponoć.** Otkazivanje više nije
+  moguće. Javite se osoblju menze osobno; administrator po potrebi može
+  intervenirati.
 
 ---
 
@@ -200,7 +216,13 @@ napraviti nakon završetka popodnevnog termina:
 
 1. Kliknite **„Prebaci u Nepreuzeto"**.
 2. Potvrdite dijalog.
-3. Sve narudžbe na čekanju postaju nepreuzete i prelaze u sljedeći tab.
+3. Narudžbe za današnji datum koje su još uvijek na čekanju postaju
+   nepreuzete i prelaze u sljedeći tab.
+
+> **Sigurnosno ograničenje:** Akcija djeluje **isključivo na narudžbe
+> čiji je datum današnji ili stariji**. Pred-narudžbe za iduće radne
+> dane su zaštićene i ostaju netaknute — možete bez brige kliknuti
+> gumb na kraju dana.
 
 ### 2.5 Tab „Nepreuzeto" — izvještaji i čišćenje
 
@@ -234,32 +256,30 @@ Gumb **„Obriši Sve"** arhivira sve nepreuzete narudžbe i čisti listu.
 Korisno za održavanje preglednosti – preporuča se napraviti tek nakon
 što ste izvezli CSV.
 
-### 2.6 Tab „Postavke" — radno vrijeme i isporuka
+### 2.6 Tab „Postavke" — prozor naručivanja i isporuka
 
-Ovdje se podešava kad menza prima narudžbe i kad se one isporučuju.
-Sva polja su brojevi (sati 0–23) ili vremena (HH:MM).
+**Vrijeme naručivanja:**
+- *Početak (sat)* i *Kraj (sat)* – jedinstveni dnevni prozor unutar
+  kojeg korisnici mogu naručivati i otkazivati za idući radni dan.
+  Vrijednosti su sati u 24-satnom formatu; **24 znači ponoć (00:00)**.
+  Zadane vrijednosti su 8 i 24 (08:00 – ponoć).
 
-**Jutarnji termin:**
-- *Početak* i *Kraj* – sati u kojima je jutarnja narudžba moguća
-  (npr. 8 i 10 znači od 08:00 do 09:59).
-
-**Popodnevni termin:**
-- *Enable* (kvačica) – uključuje ili isključuje popodnevni termin u
-  cijeloj aplikaciji. Kad je isključen, korisnici ne mogu naručivati
-  popodne i tab „Popodne" se ne prikazuje.
-- *Početak* i *Kraj* – analogno jutarnjima.
+**Popodnevni termin (slot):**
+- *Omogući* (kvačica) – određuje smije li korisnik birati popodnevni
+  obrok pri narudžbi. Kad je isključen, korisnik vidi samo jutarnji
+  termin. Sam prozor naručivanja (iznad) ostaje isti.
 
 **Vrijeme isporuke:**
 - Preporučeno vrijeme dolaska po obrok za jutarnji i popodnevni termin
-  (npr. 10:30 i 16:30). Prikazuje se korisnicima.
+  (npr. 10:30 i 16:30). Prikazuje se korisnicima nakon potvrde
+  narudžbe.
 
 Po promjeni vrijednosti kliknite **„Spremi Postavke"**. Promjene se
 primjenjuju odmah.
 
-> **Veza s otkazivanjem narudžbi:** Vremena ovdje izravno određuju i
-> prozor unutar kojeg korisnici mogu otkazati narudžbu. Promjena radnih
-> sati znači i promjenu prozora otkazivanja – planirajte u skladu s
-> rasporedom kuhinje.
+> **Veza s otkazivanjem narudžbi:** Prozor naručivanja istovremeno
+> određuje i prozor otkazivanja. Ako ga skratite (npr. na 8–22),
+> korisnici od 22:00 nadalje ne mogu ni naručivati ni otkazivati.
 
 ### 2.7 Tipični dnevni tijek (workflow)
 

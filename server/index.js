@@ -156,6 +156,15 @@ app.post('/api/orders', (req, res) => {
 
     const data = readData();
 
+    // Same daily window gates ordering as it gates cancellation.
+    if (!isWithinOrderingWindow(req.currentDate, data.settings || {})) {
+        return res.status(403).json({ error: "Naručivanje trenutno nije aktivno — pokušajte tijekom radnih sati za naručivanje." });
+    }
+    // Order date must be strictly in the future (you can't order for today).
+    if (!date || date <= todayStr(req.currentDate)) {
+        return res.status(403).json({ error: "Naručivanje za današnji ili prošli dan nije moguće." });
+    }
+
     // Generate 6 digit code
     const code = Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -195,13 +204,16 @@ app.put('/api/orders/:id', (req, res) => {
     }
 });
 
-// POST move to non-collected (Admin)
+// POST move to non-collected (Admin). Only affects orders whose meal date
+// is today or earlier — tomorrow's pre-orders are protected so an admin
+// can't accidentally archive them by clicking this at end-of-day.
 app.post('/api/orders/non-collected', (req, res) => {
     console.log("Moving pending orders to non-collected...");
     const data = readData();
+    const today = todayStr(req.currentDate);
     let count = 0;
     data.orders.forEach(o => {
-        if (o.status === 'pending') {
+        if (o.status === 'pending' && o.date <= today) {
             o.status = 'non_collected';
             count++;
         }
@@ -228,22 +240,27 @@ app.delete('/api/orders/non-collected', (req, res) => {
 });
 
 
-// Authoritative check: an order can only be cancelled while we're inside
-// its slot's working-hours window on its own date. The frontend mirrors
-// this so the button hides, but the gate lives here so a crafted DELETE
-// can't bypass it.
+// Orders are placed the day before the meal. There is a single daily
+// "ordering window" — by default 08:00 → midnight — during which users
+// can both order and cancel for any future meal date. Outside that
+// window (e.g. 02:00 at night) the system is closed even if the meal
+// date is still in the future. Cancellation additionally requires the
+// meal date to still be in the future. The frontend mirrors both checks
+// so the UI hides actions, but the gates live here so a crafted request
+// can't bypass them.
+const todayStr = (now) =>
+    `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+const orderingStartHour = (settings) =>
+    typeof settings?.orderingStart === 'number' ? settings.orderingStart : 8;
+const orderingEndHour = (settings) =>
+    typeof settings?.orderingEnd === 'number' ? settings.orderingEnd : 24;
+const isWithinOrderingWindow = (now, settings) => {
+    const h = now.getHours();
+    return h >= orderingStartHour(settings) && h < orderingEndHour(settings);
+};
 const isOrderCancelable = (order, now, settings) => {
-    if (!order || !settings) return false;
-    const nowDateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    if (order.date !== nowDateStr) return false;
-    const nowHour = now.getHours();
-    if (order.slot === 'morning') {
-        return nowHour >= settings.morningStart && nowHour < settings.morningEnd;
-    }
-    if (order.slot === 'afternoon') {
-        return !!settings.afternoonEnabled && nowHour >= settings.afternoonStart && nowHour < settings.afternoonEnd;
-    }
-    return false;
+    if (!order || !order.date) return false;
+    return todayStr(now) < order.date && isWithinOrderingWindow(now, settings);
 };
 
 // DELETE order — user cancellation, only inside the slot's working hours.
@@ -321,14 +338,14 @@ app.get('/api/settings', (req, res) => {
     const data = readData();
     // Default settings if not present
     const settings = data.settings || {
-        morningStart: 8,
-        morningEnd: 10,
-        afternoonStart: 14,
-        afternoonEnd: 16,
+        orderingStart: 8,
+        orderingEnd: 24,
         afternoonEnabled: true,
         morningDeliveryTime: "10:30",
         afternoonDeliveryTime: "16:30"
     };
+    if (typeof settings.orderingStart !== 'number') settings.orderingStart = 8;
+    if (typeof settings.orderingEnd !== 'number') settings.orderingEnd = 24;
     if (!settings.morningDeliveryTime) settings.morningDeliveryTime = "10:30";
     if (!settings.afternoonDeliveryTime) settings.afternoonDeliveryTime = "16:30";
     res.json(settings);

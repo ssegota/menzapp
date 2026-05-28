@@ -10,8 +10,8 @@ const AdminDashboard = ({ mockTime }) => {
     const [menus, setMenus] = useState([]);
     const [orders, setOrders] = useState([]);
     const [settings, setSettings] = useState({
-        morningStart: 8, morningEnd: 10,
-        afternoonStart: 14, afternoonEnd: 16,
+        orderingStart: 8,
+        orderingEnd: 24,
         afternoonEnabled: true,
         morningDeliveryTime: "10:30",
         afternoonDeliveryTime: "16:30"
@@ -464,27 +464,33 @@ const AdminDashboard = ({ mockTime }) => {
                     <h2 className="title">Postavke</h2>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         <div>
-                            <h3 style={{ marginBottom: '10px', marginTop: 0 }}>Jutarnji Termin</h3>
+                            <h3 style={{ marginBottom: '10px', marginTop: 0 }}>Vrijeme naručivanja</h3>
+                            <p style={{ margin: '0 0 10px 0', fontSize: '0.85rem', color: '#666' }}>
+                                Jedinstveni dnevni prozor unutar kojeg korisnici mogu naručivati i otkazivati za idući radni dan. Sati u 24-satnom formatu; <strong>24 = ponoć (00:00)</strong>.
+                            </p>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '15px' }}>
-                                <div><label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '5px' }}>Početak:</label> <input type="number" value={settings.morningStart} onChange={e => setSettings({ ...settings, morningStart: parseInt(e.target.value) })} style={{ width: '100%' }} /></div>
-                                <div><label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '5px' }}>Kraj:</label> <input type="number" value={settings.morningEnd} onChange={e => setSettings({ ...settings, morningEnd: parseInt(e.target.value) })} style={{ width: '100%' }} /></div>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '5px' }}>Početak (sat):</label>
+                                    <input type="number" min="0" max="23" value={settings.orderingStart ?? 8} onChange={e => setSettings({ ...settings, orderingStart: parseInt(e.target.value) || 0 })} style={{ width: '100%' }} />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '5px' }}>Kraj (sat):</label>
+                                    <input type="number" min="1" max="24" value={settings.orderingEnd ?? 24} onChange={e => setSettings({ ...settings, orderingEnd: parseInt(e.target.value) || 24 })} style={{ width: '100%' }} />
+                                </div>
                             </div>
                         </div>
 
                         <div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginBottom: '10px' }}>
-                                <h3 style={{ margin: 0 }}>Popodnevni Termin</h3>
+                                <h3 style={{ margin: 0 }}>Popodnevni termin (slot)</h3>
                                 <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                    Enable:
+                                    Omogući:
                                     <input type="checkbox" checked={settings.afternoonEnabled} onChange={e => setSettings({ ...settings, afternoonEnabled: e.target.checked })} style={{ width: 'auto' }} />
                                 </label>
                             </div>
-                            {settings.afternoonEnabled && (
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '15px' }}>
-                                    <div><label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '5px' }}>Početak:</label> <input type="number" value={settings.afternoonStart} onChange={e => setSettings({ ...settings, afternoonStart: parseInt(e.target.value) })} style={{ width: '100%' }} /></div>
-                                    <div><label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '5px' }}>Kraj:</label> <input type="number" value={settings.afternoonEnd} onChange={e => setSettings({ ...settings, afternoonEnd: parseInt(e.target.value) })} style={{ width: '100%' }} /></div>
-                                </div>
-                            )}
+                            <p style={{ margin: 0, fontSize: '0.85rem', color: '#666' }}>
+                                Određuje smije li korisnik birati popodnevni termin pri naručivanju. Vrijeme isporuke postavlja se ispod.
+                            </p>
                         </div>
 
                         <div>

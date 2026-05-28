@@ -12,23 +12,40 @@ const UserDashboard = ({ user, mockTime }) => {
     // State for functionality
     const [confirmModalOpen, setConfirmModalOpen] = useState(false);
     const [selectedMenu, setSelectedMenu] = useState(null);
-    const [orderConfirmed, setOrderConfirmed] = useState(false);
+    // 'select' → user picks a dish, 'legal' → legal warning before commit,
+    // 'success' → confirmation with pickup code.
+    const [confirmStep, setConfirmStep] = useState('select');
     const [confirmedOrderCode, setConfirmedOrderCode] = useState('');
 
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [editingOrder, setEditingOrder] = useState(null);
 
+    // User picks the slot for tomorrow's meal; not time-determined.
+    const [selectedSlot, setSelectedSlot] = useState('morning');
+
     // Settings State
     const [settings, setSettings] = useState({
-        morningStart: 8, morningEnd: 10,
-        afternoonStart: 14, afternoonEnd: 16,
+        orderingStart: 8,
+        orderingEnd: 24,
         afternoonEnabled: true,
         morningDeliveryTime: "10:30",
         afternoonDeliveryTime: "16:30"
     });
 
-    const currentDateStr = `${mockTime.getFullYear()}-${String(mockTime.getMonth() + 1).padStart(2, '0')}-${String(mockTime.getDate()).padStart(2, '0')}`;
-    const currentHour = mockTime.getHours();
+    const toDateStr = (d) =>
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const currentDateStr = toDateStr(mockTime);
+
+    // Orders are placed for the next workday — Friday → Monday so users
+    // aren't stuck with empty weekend menus. The deadline to order or
+    // cancel is midnight before that target date.
+    const nextWorkday = (from) => {
+        const d = new Date(from.getFullYear(), from.getMonth(), from.getDate() + 1);
+        while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
+        return d;
+    };
+    const targetDate = nextWorkday(mockTime);
+    const targetDateStr = toDateStr(targetDate);
 
     // Translation helpers
     const getSlotName = (slot) => slot === 'morning' ? 'Jutarnji' : 'Popodnevni';
@@ -52,21 +69,27 @@ const UserDashboard = ({ user, mockTime }) => {
         } catch (err) { }
     };
 
-    let activeSlot = null;
-    if (currentHour >= settings.morningStart && currentHour < settings.morningEnd) activeSlot = 'morning';
-    if (settings.afternoonEnabled && currentHour >= settings.afternoonStart && currentHour < settings.afternoonEnd) activeSlot = 'afternoon';
+    // If popodne is disabled in settings, force selection back to morning.
+    useEffect(() => {
+        if (!settings.afternoonEnabled && selectedSlot === 'afternoon') {
+            setSelectedSlot('morning');
+        }
+    }, [settings.afternoonEnabled, selectedSlot]);
 
-    // Mirrors the server check: cancellation is only allowed inside the
-    // order's slot window on the order's own date. Server enforces too.
+    // One daily ordering window — from `orderingStart` to `orderingEnd`
+    // (defaults 8 → 24, i.e. midnight). Same window gates both placing
+    // and cancelling orders. End=24 represents midnight (next-day 00:00).
+    const orderingStart = typeof settings.orderingStart === 'number' ? settings.orderingStart : 8;
+    const orderingEnd = typeof settings.orderingEnd === 'number' ? settings.orderingEnd : 24;
+    const currentHour = mockTime.getHours();
+    const isOrderingActive = currentHour >= orderingStart && currentHour < orderingEnd;
+    const endLabel = orderingEnd >= 24 ? 'ponoći (00:00)' : `${String(orderingEnd).padStart(2, '0')}:00`;
+
+    // Mirrors the server check: cancellation needs the order's date still
+    // in the future AND the current time to be inside the ordering window.
     const isOrderCancelable = (order) => {
-        if (!order || order.date !== currentDateStr) return false;
-        if (order.slot === 'morning') {
-            return currentHour >= settings.morningStart && currentHour < settings.morningEnd;
-        }
-        if (order.slot === 'afternoon') {
-            return !!settings.afternoonEnabled && currentHour >= settings.afternoonStart && currentHour < settings.afternoonEnd;
-        }
-        return false;
+        if (!order || !order.date) return false;
+        return currentDateStr < order.date && isOrderingActive;
     };
 
     const fetchMenus = async () => {
@@ -92,7 +115,12 @@ const UserDashboard = ({ user, mockTime }) => {
     // Open confirmation modal
     const initiateOrder = (menu) => {
         setSelectedMenu(menu);
+        setConfirmStep('select');
         setConfirmModalOpen(true);
+    };
+    const closeConfirmModal = () => {
+        setConfirmModalOpen(false);
+        setConfirmStep('select');
     };
 
     const confirmOrder = async () => {
@@ -104,15 +132,15 @@ const UserDashboard = ({ user, mockTime }) => {
                 body: JSON.stringify({
                     userId: user.id,
                     menuId: selectedMenu.id,
-                    date: currentDateStr,
-                    slot: activeSlot
+                    date: targetDateStr,
+                    slot: selectedSlot
                 })
             });
             const data = await res.json();
             if (data.success) {
                 setMessage('Narudžba zabilježena!');
                 setConfirmedOrderCode(data.order.code);
-                setOrderConfirmed(true);
+                setConfirmStep('success');
                 fetchOrders();
             }
         } catch (err) {
@@ -141,7 +169,7 @@ const UserDashboard = ({ user, mockTime }) => {
         }
     };
 
-    const availableMenus = menus.filter(m => m.date === currentDateStr && m.slot === activeSlot);
+    const availableMenus = menus.filter(m => m.date === targetDateStr && m.slot === selectedSlot);
 
     // Show all active orders for this user
     const myActiveOrders = orders.filter(o => o.userId === user.id && o.status === 'pending');
@@ -183,53 +211,88 @@ const UserDashboard = ({ user, mockTime }) => {
                 <div style={{ width: '100%' }}>
                     {/* Menu Selection */}
                     <div className="card" style={{ padding: '30px' }}>
-                        <h2 className="title" style={{ fontSize: '1.8rem' }}>Današnji Meni</h2>
+                        <h2 className="title" style={{ fontSize: '1.8rem' }}>Naručivanje obroka</h2>
 
-                        <div style={{
-                            padding: '15px',
-                            borderRadius: '8px',
-                            background: activeSlot ? '#e3f2fd' : '#f5f5f5',
-                            color: activeSlot ? '#1565c0' : '#757575',
-                            marginBottom: '20px',
-                            textAlign: 'center',
-                            fontWeight: '600'
-                        }}>
-                            {activeSlot
-                                ? `Trenutno: ${getSlotName(activeSlot)} termin`
-                                : `Kuhinja ne prima narudžbe. (Sati: ${String(currentHour).padStart(2, '0')}:00)`
-                            }
-                            {!activeSlot && (
-                                <p style={{ fontWeight: 'normal', fontSize: '0.9rem', margin: '5px 0 0' }}>
-                                    Jutro: {String(settings.morningStart).padStart(2, '0')}:00-{String(settings.morningEnd).padStart(2, '0')}:00
-                                    {settings.afternoonEnabled && ` & Popodne: ${String(settings.afternoonStart).padStart(2, '0')}:00-${String(settings.afternoonEnd).padStart(2, '0')}:00`}
+                        {!isOrderingActive ? (
+                            <div style={{
+                                padding: '20px',
+                                borderRadius: '8px',
+                                background: '#fff3cd',
+                                color: '#856404',
+                                textAlign: 'center',
+                                fontWeight: '600'
+                            }}>
+                                <p style={{ margin: '0 0 6px 0', fontSize: '1.1rem' }}>Naručivanje trenutno nije aktivno.</p>
+                                <p style={{ margin: 0, fontWeight: 'normal', fontSize: '0.95rem' }}>
+                                    Naručivanje je moguće svakodnevno od <strong>{String(orderingStart).padStart(2, '0')}:00</strong> do <strong>{endLabel}</strong>.
                                 </p>
-                            )}
-                        </div>
-
-                        {activeSlot && (
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '15px' }}>
-                                {availableMenus.length === 0 ? <p style={{ textAlign: 'center', width: '100%' }}>Nema menija za ovaj termin.</p> : (
-                                    availableMenus.map(menu => (
-                                        <div
-                                            key={menu.id}
-                                            className="menu-item"
-                                            onClick={() => initiateOrder(menu)}
-                                            style={{
-                                                padding: '20px',
-                                                borderRadius: '12px',
-                                                border: '1px solid #ddd',
-                                                textAlign: 'center',
-                                                background: '#fff'
-                                            }}
-                                        >
-                                            <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem', color: 'var(--color-accent)' }}>
-                                                <ReactMarkdown>{menu.text}</ReactMarkdown>
-                                            </h3>
-                                            <span style={{ fontSize: '0.9rem', color: '#888' }}>Klikni za odabir</span>
-                                        </div>
-                                    ))
-                                )}
                             </div>
+                        ) : (
+                            <>
+                                <div style={{
+                                    padding: '15px 18px',
+                                    borderRadius: '8px',
+                                    background: '#e3f2fd',
+                                    color: '#1565c0',
+                                    marginBottom: '20px',
+                                    textAlign: 'left',
+                                    fontSize: '0.95rem',
+                                    lineHeight: '1.5'
+                                }}>
+                                    <p style={{ margin: '0 0 8px 0', fontWeight: '700', fontSize: '1.05rem' }}>
+                                        Naručujete obrok za {formatDateEU(targetDateStr)}.
+                                    </p>
+                                    <ul style={{ margin: '6px 0 0 18px', padding: 0 }}>
+                                        <li>Odaberite termin (jutarnji {settings.afternoonEnabled ? 'ili popodnevni' : ''}) i kliknite na željeno jelo.</li>
+                                        <li>Naručivanje i otkazivanje moguće je svakodnevno od <strong>{String(orderingStart).padStart(2, '0')}:00 do {endLabel}</strong>; krajnji rok za sutrašnji obrok — danas do <strong>{endLabel}</strong>.</li>
+                                        <li>Po potvrdi narudžbe dobit ćete šesteroznamenkasti kod koji pokažete osoblju pri preuzimanju.</li>
+                                    </ul>
+                                </div>
+
+                                <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>Termin:</label>
+                                    <div style={{ display: 'flex', gap: '15px', width: '100%', maxWidth: '400px' }}>
+                                        <button
+                                            onClick={() => setSelectedSlot('morning')}
+                                            style={{ flex: 1, padding: '10px 20px', background: selectedSlot === 'morning' ? 'var(--color-primary)' : '#eee', color: selectedSlot === 'morning' ? 'var(--color-text)' : '#333' }}
+                                        >
+                                            Jutro
+                                        </button>
+                                        {settings.afternoonEnabled && (
+                                            <button
+                                                onClick={() => setSelectedSlot('afternoon')}
+                                                style={{ flex: 1, padding: '10px 20px', background: selectedSlot === 'afternoon' ? 'var(--color-secondary)' : '#eee', color: selectedSlot === 'afternoon' ? 'white' : '#333' }}
+                                            >
+                                                Popodne
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '15px' }}>
+                                    {availableMenus.length === 0 ? <p style={{ textAlign: 'center', width: '100%', color: '#888' }}>Nema menija za odabrani termin.</p> : (
+                                        availableMenus.map(menu => (
+                                            <div
+                                                key={menu.id}
+                                                className="menu-item"
+                                                onClick={() => initiateOrder(menu)}
+                                                style={{
+                                                    padding: '20px',
+                                                    borderRadius: '12px',
+                                                    border: '1px solid #ddd',
+                                                    textAlign: 'center',
+                                                    background: '#fff'
+                                                }}
+                                            >
+                                                <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem', color: 'var(--color-accent)' }}>
+                                                    <ReactMarkdown>{menu.text}</ReactMarkdown>
+                                                </h3>
+                                                <span style={{ fontSize: '0.9rem', color: '#888' }}>Klikni za odabir</span>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </>
                         )}
                     </div>
                 </div>
@@ -341,21 +404,77 @@ const UserDashboard = ({ user, mockTime }) => {
             {/* Confirmation Modal */}
             {confirmModalOpen && selectedMenu && (
                 <div className="modal-overlay">
-                    <div className="modal-content" style={{ textAlign: 'center', maxWidth: orderConfirmed ? '800px' : '500px' }}>
-                        {!orderConfirmed ? (
+                    <div className="modal-content" style={{ textAlign: 'center', maxWidth: confirmStep === 'success' ? '800px' : (confirmStep === 'legal' ? '640px' : '500px') }}>
+                        {confirmStep === 'select' && (
                             <>
                                 <h3 style={{ marginTop: 0 }}>Potvrda narudžbe</h3>
-                                <p>Želite li naručiti:</p>
+                                <p style={{ margin: '0 0 6px 0' }}>Želite li naručiti za <strong>{formatDateEU(targetDateStr)}</strong>, {getSlotName(selectedSlot).toLowerCase()} termin:</p>
                                 <div style={{ fontSize: '1.2rem', color: 'var(--color-accent)' }}>
                                     <ReactMarkdown>{selectedMenu.text}</ReactMarkdown>
                                 </div>
 
                                 <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '20px' }}>
-                                    <button onClick={() => setConfirmModalOpen(false)} style={{ background: '#eee', color: '#333' }}>Odustani</button>
-                                    <button onClick={confirmOrder}>{loading ? 'Slanje...' : 'Potvrdi'}</button>
+                                    <button onClick={closeConfirmModal} style={{ background: '#eee', color: '#333' }}>Odustani</button>
+                                    <button onClick={() => setConfirmStep('legal')}>Potvrdi</button>
                                 </div>
                             </>
-                        ) : (
+                        )}
+
+                        {confirmStep === 'legal' && (
+                            <div style={{ textAlign: 'left' }}>
+                                <h3 style={{ marginTop: 0, color: 'var(--color-danger)', textAlign: 'center' }}>Pravna obavijest o narudžbi</h3>
+                                <p style={{ margin: '0 0 12px 0' }}>
+                                    Prije konačne potvrde molimo Vas da pažljivo pročitate sljedeće uvjete.
+                                    Klikom na <strong>„Potvrđujem narudžbu"</strong> izjavljujete sljedeće:
+                                </p>
+                                <ol style={{ paddingLeft: '22px', margin: 0, fontSize: '0.9rem', lineHeight: '1.55' }}>
+                                    <li>
+                                        Naručujete obrok prema odabranom jelovniku za datum
+                                        <strong> {formatDateEU(targetDateStr)}</strong> i <strong>{getSlotName(selectedSlot).toLowerCase()}</strong> termin.
+                                        Narudžba je obvezujuća i ima karakter neopozive ponude.
+                                    </li>
+                                    <li>
+                                        Obvezujete se osobno preuzeti obrok u terminu naznačenom za odabrani dan,
+                                        u prostorijama menze, predočenjem šesteroznamenkastog koda dodijeljenog po potvrdi narudžbe.
+                                    </li>
+                                    <li>
+                                        Obvezujete se podmiriti puni iznos cijene obroka prema važećem cjeniku menze,
+                                        <strong> neovisno o tome jeste li obrok preuzeli ili niste</strong>.
+                                        Nedolazak po obrok ne oslobađa od obveze plaćanja.
+                                    </li>
+                                    <li>
+                                        Otkazivanje narudžbe moguće je isključivo tijekom dnevnog prozora naručivanja
+                                        (<strong>{String(orderingStart).padStart(2, '0')}:00 – {endLabel}</strong>) i samo dok je datum narudžbe još uvijek u budućnosti.
+                                        Nakon isteka tog roka narudžba se smatra konačno prihvaćenom te ju nije moguće stornirati.
+                                    </li>
+                                    <li>
+                                        Šesteroznamenkasti kod predstavlja Vašu identifikaciju pri preuzimanju i <strong>nije prenosiv na treću osobu</strong>.
+                                        Zloupotreba koda smatra se kršenjem uvjeta korištenja.
+                                    </li>
+                                    <li>
+                                        U slučaju nepreuzimanja obroka u danom terminu, narudžba se evidentira kao <em>nepreuzeta</em>,
+                                        ali ostaje fakturirana i evidentirana u Vašoj povijesti narudžbi.
+                                    </li>
+                                    <li>
+                                        Ova obavijest predstavlja informativni prikaz uvjeta naručivanja i ne zamjenjuje službene uvjete poslovanja menze
+                                        ni važeće zakonske propise Republike Hrvatske.
+                                    </li>
+                                </ol>
+                                <p style={{ marginTop: '14px', fontSize: '0.85rem', color: '#555', textAlign: 'center' }}>
+                                    Klikom „Potvrđujem narudžbu" potvrđujete da ste pročitali, razumjeli i u cijelosti prihvatili gore navedene uvjete.
+                                </p>
+
+                                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '16px', flexWrap: 'wrap' }}>
+                                    <button onClick={() => setConfirmStep('select')} style={{ background: '#eee', color: '#333' }}>Natrag</button>
+                                    <button onClick={closeConfirmModal} style={{ background: '#eee', color: '#333' }}>Odustani</button>
+                                    <button onClick={confirmOrder} disabled={loading} style={{ background: 'var(--color-danger)', color: 'white' }}>
+                                        {loading ? 'Slanje...' : 'Potvrđujem narudžbu'}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {confirmStep === 'success' && (
                             <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '30px', textAlign: 'left', flexWrap: 'wrap', justifyContent: 'center' }}>
                                 <img src="/marendapp-2.png" alt="Order Confirmed Logo" style={{ maxWidth: '280px', width: '100%', flex: '1 1 200px' }} />
 
@@ -363,9 +482,9 @@ const UserDashboard = ({ user, mockTime }) => {
                                     <h3 style={{ marginTop: 0, color: 'var(--color-success)', fontSize: '2rem' }}>Narudžba potvrđena!</h3>
 
                                     <p style={{ fontSize: '1.25rem', lineHeight: '1.6' }}>
-                                        Narudžba je primljena i bit će spremna za preuzimanje oko{' '}
+                                        Narudžba za <strong>{formatDateEU(targetDateStr)}</strong> je primljena i bit će spremna za preuzimanje oko{' '}
                                         <strong>
-                                            {activeSlot === 'afternoon' ? (settings.afternoonDeliveryTime || '16:30') : (settings.morningDeliveryTime || '10:30')}
+                                            {selectedSlot === 'afternoon' ? (settings.afternoonDeliveryTime || '16:30') : (settings.morningDeliveryTime || '10:30')}
                                         </strong>!
                                     </p>
 
@@ -377,7 +496,7 @@ const UserDashboard = ({ user, mockTime }) => {
                                     </div>
 
                                     <div style={{ marginTop: '30px', display: 'flex', justifyContent: 'flex-end' }}>
-                                        <button onClick={() => { setConfirmModalOpen(false); setOrderConfirmed(false); }} style={{ padding: '12px 40px', fontSize: '1.2rem' }}>
+                                        <button onClick={closeConfirmModal} style={{ padding: '12px 40px', fontSize: '1.2rem' }}>
                                             Zatvori
                                         </button>
                                     </div>
