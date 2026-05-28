@@ -273,7 +273,7 @@ const AdminDashboard = ({ mockTime }) => {
                 o.userEmail || '',
                 menuText,
                 formatDateEU(o.date),
-                o.slot,
+                slotLabel(o.slot),
                 o.code,
             ];
         });
@@ -339,6 +339,9 @@ const AdminDashboard = ({ mockTime }) => {
     };
 
     const currentDayMenus = menus.filter(m => m.date === `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}` && m.slot === selectedSlot);
+
+    // User-facing label for the internal slot codes.
+    const slotLabel = (s) => s === 'morning' ? 'Ručak' : 'Večera';
 
     // Filter logic
     const pendingOrders = orders.filter(o => o.status === 'pending');
@@ -413,14 +416,14 @@ const AdminDashboard = ({ mockTime }) => {
                                     onClick={() => setSelectedSlot('morning')}
                                     style={{ flex: 1, padding: '10px 20px', background: selectedSlot === 'morning' ? 'var(--color-primary)' : '#eee' }}
                                 >
-                                    Jutro
+                                    Ručak
                                 </button>
-                                {settings.afternoonEnabled && (
+                                {settings.afternoonEnabled !== false && (
                                     <button
                                         onClick={() => setSelectedSlot('afternoon')}
                                         style={{ flex: 1, padding: '10px 20px', background: selectedSlot === 'afternoon' ? 'var(--color-secondary)' : '#eee', color: selectedSlot === 'afternoon' ? 'white' : '#333' }}
                                     >
-                                        Popodne
+                                        Večera
                                     </button>
                                 )}
                             </div>
@@ -484,8 +487,8 @@ const AdminDashboard = ({ mockTime }) => {
                             style={{ width: '100%', maxWidth: '300px', textAlign: 'center', padding: '10px', borderRadius: '8px' }}
                         >
                             <option value="all">Svi termini</option>
-                            <option value="morning">Jutro</option>
-                            <option value="afternoon">Popodne</option>
+                            <option value="morning">Ručak</option>
+                            <option value="afternoon">Večera</option>
                         </select>
 
                         <input
@@ -531,7 +534,7 @@ const AdminDashboard = ({ mockTime }) => {
                                             {menu ? <ReactMarkdown>{menu.text}</ReactMarkdown> : <ReactMarkdown>{order.menuText || 'Nepoznato jelo (obrisano)'}</ReactMarkdown>}
                                         </div>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px' }}>
-                                            <span style={{ fontSize: '0.8rem', color: '#888' }}>{formatDateEU(order.date)} | {order.slot}</span>
+                                            <span style={{ fontSize: '0.8rem', color: '#888' }}>{formatDateEU(order.date)} | {slotLabel(order.slot)}</span>
                                             <span style={{ fontWeight: 'bold', background: '#333', color: 'var(--color-primary)', padding: '2px 6px', borderRadius: '4px' }}>
                                                 {order.code}
                                             </span>
@@ -575,7 +578,7 @@ const AdminDashboard = ({ mockTime }) => {
                                                 <td style={{ padding: '10px' }}>{order.userName || `#${order.userId}`}</td>
                                                 <td style={{ padding: '10px', color: '#666' }}>{order.userEmail || ''}</td>
                                                 <td style={{ padding: '10px' }}>{menu ? <ReactMarkdown>{menu.text}</ReactMarkdown> : <ReactMarkdown>{order.menuText || 'Nepoznato jelo (obrisano)'}</ReactMarkdown>}</td>
-                                                <td style={{ padding: '10px', whiteSpace: 'nowrap' }}>{formatDateEU(order.date)} ({order.slot})</td>
+                                                <td style={{ padding: '10px', whiteSpace: 'nowrap' }}>{formatDateEU(order.date)} ({slotLabel(order.slot)})</td>
                                                 <td style={{ padding: '10px', fontWeight: 'bold' }}>{order.code}</td>
                                             </tr>
                                         );
@@ -690,14 +693,14 @@ const AdminDashboard = ({ mockTime }) => {
 
                         <div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginBottom: '10px' }}>
-                                <h3 style={{ margin: 0 }}>Popodnevni termin (slot)</h3>
+                                <h3 style={{ margin: 0 }}>Večera (slot)</h3>
                                 <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                                     Omogući:
                                     <input type="checkbox" checked={settings.afternoonEnabled} onChange={e => setSettings({ ...settings, afternoonEnabled: e.target.checked })} style={{ width: 'auto' }} />
                                 </label>
                             </div>
                             <p style={{ margin: 0, fontSize: '0.85rem', color: '#666' }}>
-                                Određuje smije li korisnik birati popodnevni termin pri naručivanju. Vrijeme isporuke postavlja se ispod.
+                                Određuje smije li korisnik birati Večeru pri naručivanju. Vrijeme isporuke postavlja se ispod.
                             </p>
                         </div>
 
@@ -705,7 +708,7 @@ const AdminDashboard = ({ mockTime }) => {
                             <h3 style={{ textAlign: 'center', marginBottom: '15px' }}>Vrijeme Isporuke</h3>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '20px', textAlign: 'center' }}>
                                 <div>
-                                    <label style={{ display: 'block', marginBottom: '5px' }}>Jutro (HH:MM):</label>
+                                    <label style={{ display: 'block', marginBottom: '5px' }}>Ručak (HH:MM):</label>
                                     <input
                                         type="time"
                                         value={settings.morningDeliveryTime || "10:30"}
@@ -713,9 +716,9 @@ const AdminDashboard = ({ mockTime }) => {
                                         style={{ width: '100%', textAlign: 'center' }}
                                     />
                                 </div>
-                                {settings.afternoonEnabled && (
+                                {settings.afternoonEnabled !== false && (
                                     <div>
-                                        <label style={{ display: 'block', marginBottom: '5px' }}>Popodne (HH:MM):</label>
+                                        <label style={{ display: 'block', marginBottom: '5px' }}>Večera (HH:MM):</label>
                                         <input
                                             type="time"
                                             value={settings.afternoonDeliveryTime || "16:30"}

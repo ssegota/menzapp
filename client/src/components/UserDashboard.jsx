@@ -47,7 +47,9 @@ const UserDashboard = ({ user, mockTime }) => {
     const targetDateStr = toDateStr(targetDate);
 
     // Translation helpers
-    const getSlotName = (slot) => slot === 'morning' ? 'Jutarnji' : 'Popodnevni';
+    // Internal codes stay 'morning'/'afternoon' (data, DB, server logic);
+    // user-facing labels are "Ručak" / "Večera".
+    const getSlotName = (slot) => slot === 'morning' ? 'Ručak' : 'Večera';
     const formatDateEU = (dateStr) => {
         if (!dateStr) return '';
         const [y, m, d] = dateStr.split('-');
@@ -287,7 +289,7 @@ const UserDashboard = ({ user, mockTime }) => {
                                         Naručujete obrok za {formatDateEU(targetDateStr)}.
                                     </p>
                                     <ul style={{ margin: '6px 0 0 18px', padding: 0 }}>
-                                        <li>Odaberite termin (jutarnji {settings.afternoonEnabled ? 'ili popodnevni' : ''}) i kliknite na željeno jelo.</li>
+                                        <li>Odaberite termin (ručak{settings.afternoonEnabled ? ' ili večera' : ''}) i kliknite na željeno jelo.</li>
                                         <li>Naručivanje i otkazivanje moguće je svakodnevno od <strong>{String(orderingStart).padStart(2, '0')}:00 do {endLabel}</strong>; krajnji rok za sutrašnji obrok — danas do <strong>{endLabel}</strong>.</li>
                                         <li>Po potvrdi narudžbe dobit ćete šesteroznamenkasti kod koji pokažete osoblju pri preuzimanju.</li>
                                     </ul>
@@ -300,14 +302,14 @@ const UserDashboard = ({ user, mockTime }) => {
                                             onClick={() => setSelectedSlot('morning')}
                                             style={{ flex: 1, padding: '10px 20px', background: selectedSlot === 'morning' ? 'var(--color-primary)' : '#eee', color: selectedSlot === 'morning' ? 'var(--color-text)' : '#333' }}
                                         >
-                                            Jutro
+                                            Ručak
                                         </button>
-                                        {settings.afternoonEnabled && (
+                                        {settings.afternoonEnabled !== false && (
                                             <button
                                                 onClick={() => setSelectedSlot('afternoon')}
                                                 style={{ flex: 1, padding: '10px 20px', background: selectedSlot === 'afternoon' ? 'var(--color-secondary)' : '#eee', color: selectedSlot === 'afternoon' ? 'white' : '#333' }}
                                             >
-                                                Popodne
+                                                Večera
                                             </button>
                                         )}
                                     </div>
@@ -452,7 +454,7 @@ const UserDashboard = ({ user, mockTime }) => {
                         {confirmStep === 'select' && (
                             <>
                                 <h3 style={{ marginTop: 0 }}>Potvrda narudžbe</h3>
-                                <p style={{ margin: '0 0 6px 0' }}>Želite li naručiti za <strong>{formatDateEU(targetDateStr)}</strong>, {getSlotName(selectedSlot).toLowerCase()} termin:</p>
+                                <p style={{ margin: '0 0 6px 0' }}>Želite li naručiti <strong>{getSlotName(selectedSlot).toLowerCase()}</strong> za <strong>{formatDateEU(targetDateStr)}</strong>:</p>
                                 <div style={{ fontSize: '1.2rem', color: 'var(--color-accent)' }}>
                                     <ReactMarkdown>{selectedMenu.text}</ReactMarkdown>
                                 </div>
@@ -473,8 +475,8 @@ const UserDashboard = ({ user, mockTime }) => {
                                 </p>
                                 <ol style={{ paddingLeft: '22px', margin: 0, fontSize: '0.9rem', lineHeight: '1.55' }}>
                                     <li>
-                                        Naručujete obrok prema odabranom jelovniku za datum
-                                        <strong> {formatDateEU(targetDateStr)}</strong> i <strong>{getSlotName(selectedSlot).toLowerCase()}</strong> termin.
+                                        Naručujete <strong>{getSlotName(selectedSlot).toLowerCase()}</strong> prema odabranom jelovniku za datum
+                                        <strong> {formatDateEU(targetDateStr)}</strong>.
                                         Narudžba je obvezujuća i ima karakter neopozive ponude.
                                     </li>
                                     <li>

@@ -365,6 +365,7 @@ app.get('/api/settings', (req, res) => {
     if (!settings.morningDeliveryTime) settings.morningDeliveryTime = "10:30";
     if (!settings.afternoonDeliveryTime) settings.afternoonDeliveryTime = "16:30";
     if (typeof settings.timeTravelEnabled !== 'boolean') settings.timeTravelEnabled = true;
+    if (typeof settings.afternoonEnabled !== 'boolean') settings.afternoonEnabled = true;
     res.json(settings);
 });
 
